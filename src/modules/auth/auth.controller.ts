@@ -27,17 +27,28 @@ export class AuthController {
     async (req: Request, res: Response, next: NextFunction) => {
       const body = req.body;
       logger.info(body, "Login body");
-      const user = await this.authService.loginUser(body.email, body.password);
-      const { password, ...safeUser } = user.user;
+      const user = await this.authService.loginUser(body.phoneNumber);
 
-      const data = {
-        user: safeUser,
-        accessToken: user.accessToken,
-        refreshToken: user.refreshToken,
-      };
+  
+    }
+  );
 
+  // reset password
+  // sendOtp = asyncHandler(
+  //   async (req: Request, res: Response, next: NextFunction) => {
+  //     const { email } = req.body;
+  //     const result = await this.authService.sendOtp(email);
+  //     logger.info(result, "result");
+  //     res.status(HttpCodes.Ok).json(result);
+  //   }
+  // );
+
+  verifyOtp = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { email, otp } = req.body;
+      const record = await this.authService.verifyOtp(email, otp);
       // Backend cookie (login or refresh)
-      res.cookie("refreshToken", user.refreshToken, {
+      res.cookie("refreshToken", record.refreshToken, {
         httpOnly: true,
         secure: true, // HTTP in dev
         sameSite: "none", // POST + GET works cross-port in dev
@@ -49,83 +60,65 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: "Login successful",
-        data,
+        data: record,
       });
     }
   );
 
-  // reset password
-  sendOtp = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { email } = req.body;
-      const result = await this.authService.sendOtp(email);
-      logger.info(result, "result");
-      res.status(HttpCodes.Ok).json(result);
-    }
-  );
+  // setNewPassword = asyncHandler(
+  //   async (req: Request, res: Response, next: NextFunction) => {
+  //     const { email, newPassword, confirmPassword } = req.body;
 
-  verifyOtp = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { email, otp } = req.body;
-      const record = await this.authService.verifyOtp(email, otp);
-      return res.status(HttpCodes.Ok).json(record);
-    }
-  );
+  //     // Basic validation
+  //     if (!newPassword || !confirmPassword) {
+  //       return res.status(HttpCodes.BadRequest).json({
+  //         success: false,
+  //         message: "All fields are required",
+  //       });
+  //     }
 
-  setNewPassword = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { email, newPassword, confirmPassword } = req.body;
+  //     if (newPassword !== confirmPassword) {
+  //       return res.status(HttpCodes.BadRequest).json({
+  //         success: false,
+  //         message: "New password and confirm password do not match",
+  //       });
+  //     }
 
-      // Basic validation
-      if (!newPassword || !confirmPassword) {
-        return res.status(HttpCodes.BadRequest).json({
-          success: false,
-          message: "All fields are required",
-        });
-      }
+  //     // Call service
+  //     const result = await this.authService.setNewPassword(email, newPassword);
 
-      if (newPassword !== confirmPassword) {
-        return res.status(HttpCodes.BadRequest).json({
-          success: false,
-          message: "New password and confirm password do not match",
-        });
-      }
+  //     return res
+  //       .status(result.success ? HttpCodes.Ok : HttpCodes.BadRequest)
+  //       .json(result);
+  //   }
+  // );
 
-      // Call service
-      const result = await this.authService.setNewPassword(email, newPassword);
+  // refreshToken = asyncHandler(
+  //   async (req: Request, res: Response, _next: NextFunction) => {
+  //     const refreshToken = req.cookies?.refreshToken;
+  //     logger.info(refreshToken, "AuthController.refreshToken line:106");
+  //     if (!refreshToken) {
+  //       throw new apiError(Errors.NoToken.code, "Refresh token is required");
+  //     }
 
-      return res
-        .status(result.success ? HttpCodes.Ok : HttpCodes.BadRequest)
-        .json(result);
-    }
-  );
+  //     const result = await this.authService.refreshToken(refreshToken);
 
-  refreshToken = asyncHandler(
-    async (req: Request, res: Response, _next: NextFunction) => {
-      const refreshToken = req.cookies?.refreshToken;
-      logger.info(refreshToken, "AuthController.refreshToken line:106");
-      if (!refreshToken) {
-        throw new apiError(Errors.NoToken.code, "Refresh token is required");
-      }
+  //     // Optionally update the cookie with new refresh token
+  //     res.cookie("refreshToken", result.refreshToken, {
+  //       httpOnly: true,
+  //       secure: false, // HTTP in dev
+  //       sameSite: "lax", // works on cross-port dev
+  //       maxAge: 7 * 24 * 60 * 60 * 1000,
+  //       path: "/auth/refresh-token",
+  //     });
 
-      const result = await this.authService.refreshToken(refreshToken);
+  //     const responseData = {
+  //       ...result,
+  //     };
 
-      // Optionally update the cookie with new refresh token
-      res.cookie("refreshToken", result.refreshToken, {
-        httpOnly: true,
-        secure: false, // HTTP in dev
-        sameSite: "lax", // works on cross-port dev
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/auth/refresh-token",
-      });
-
-      const responseData = {
-        ...result,
-      };
-
-      res.status(HttpCodes.Ok).json(responseData);
-    }
-  );
+  //     res.status(HttpCodes.Ok).json(responseData);
+  //   }
+  // );
 
   logout = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {

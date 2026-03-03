@@ -16,7 +16,6 @@ userRoute.get(
   authMiddleware.authenticate,
   userController.getMyProfile
 );
-// userRoute.get("/sales-reps", userController.getSalesReps)
 userRoute.get("/:id", userController.getUserById);
 
 userRoute.patch(

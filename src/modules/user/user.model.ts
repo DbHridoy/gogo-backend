@@ -2,7 +2,15 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
   {
-    name: {
+    firstName: {
+      type: String,
+      required: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+    },
+    phoneNumber: {
       type: String,
       required: true,
     },
@@ -12,14 +20,31 @@ const userSchema = new Schema(
       index: true,
       unique: true,
     },
+    companyName: {
+      type: String,
+    },
+    trnVatNo: {
+      type: String,
+    },
+    referralCode: {
+      type: String,
+    },
     role: {
       type: String,
       required: true,
       enum: ["Admin", "User", "Rider"],
     },
-    password: {
+    emaratesId: {
       type: String,
-      required: true,
+      required: function () {
+        return this.role === "Rider";
+      },
+    },
+    drivingLicense: {
+      type: String,
+      required: function () {
+        return this.role === "Rider";
+      },
     },
   },
   {

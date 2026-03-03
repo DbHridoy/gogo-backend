@@ -69,4 +69,8 @@ export class UserRepository {
   deleteUser = async (id: string) => {
     return await User.findByIdAndDelete(id);
   };
+
+  findUserByPhoneNumber = async (phoneNumber: string) => {
+    return await User.findOne({ phoneNumber });
+  };
 }

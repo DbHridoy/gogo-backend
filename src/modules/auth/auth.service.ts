@@ -1,9 +1,9 @@
-import { logger } from "../../utils/logger";
+import { logger, logger as consoleLogger } from "../../utils/logger";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
 import bcrypt from "bcrypt";
 import { AuthRepository } from "./auth.repository";
-import {UserRepository} from "../user/user.repository";
+import { UserRepository } from "../user/user.repository";
 import { createUserType } from "./auth.type";
 import { HashUtils } from "../../utils/hash-utils";
 import { JwtUtils } from "../../utils/jwt-utils";
@@ -11,53 +11,84 @@ import { Mailer } from "../../utils/mailer-utils";
 
 export class AuthService {
 
-  constructor(private authRepo: AuthRepository,private userRepo:UserRepository,private hashUtils:HashUtils,private jwtUtils:JwtUtils,private mailerUtils:Mailer) {}
+  constructor(private authRepo: AuthRepository, private userRepo: UserRepository, private hashUtils: HashUtils, private jwtUtils: JwtUtils, private mailerUtils: Mailer) { }
 
   register = async (userBody: createUserType) => {
-    const existingUser = await this.userRepo.findUserByEmail(userBody.email);
 
-    if (existingUser) {
-      throw new apiError(
-        Errors.AlreadyExists.code,
-        Errors.AlreadyExists.message
-      );
-    }
-    const hashedPassword = await this.hashUtils.hashPassword(userBody.password);
-    logger.info({ hashedPassword }, "HashedPassword");
+    logger.info({ userBody }, "UserBody");
+
+    await this.sendOtp(userBody.phoneNumber);
 
     const user = {
       ...userBody,
-      password: hashedPassword,
     };
 
     logger.info({ user }, "user");
 
     const newUser = await this.userRepo.createUser(user);
 
-    console.log("+++++++++++++++++++++++++++++++++++++++++");
-    console.log(newUser);
-    console.log("+++++++++++++++++++++++++++++++++++++++++");
     return newUser;
   };
 
-  loginUser = async (email: string, password: string) => {
-    const user = await this.userRepo.findUserByEmail(email);
-    logger.info({ user }, "Authservice.loginUser line:45");
+  loginUser = async (phoneNumber: string) => {
+    const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
     if (!user) {
-      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      throw new apiError(Errors.NotFound.code, "User not found");
     }
-
-    const isVerified = bcrypt.compareSync(password, user.password);
+    // const isVerified = bcrypt.compareSync(password, user.password);
     // logger.info({isVerified}, "Authservice.loginUser line:51");
-    if (!isVerified) {
-      throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+    // if (!isVerified) {
+    //   throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+    // }
+
+    return await this.sendOtp(phoneNumber);
+
+
+  };
+
+  async sendOtp(phoneNumber: string) {
+    const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
+
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, "User not found");
+    }
+    const otp = Math.floor(1000 + Math.random() * 9000); // 4-digit OTP
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
+
+    // Save or update OTP in DB
+
+    try {
+      const result = await this.mailerUtils.sendOtp(phoneNumber, otp);
+      const insertedOtp = await this.authRepo.createOtp(phoneNumber, otp, expiresAt);
+      return {
+        success: true,
+        data: insertedOtp,
+        message: "OTP sent successfully",
+      };
+    } catch (error) {
+      console.error("Email error:", error);
+      return { success: false, message: "Failed to send OTP" };
+    }
+  }
+
+  async verifyOtp(phoneNumber: string, otp: string) {
+    const record = await this.authRepo.verifyOtp(phoneNumber, Number(otp));
+    if (!record) {
+      return { success: false, message: "Invalid OTP" };
     }
 
+    if (record.expiresAt < new Date()) {
+      return { success: false, message: "OTP expired" };
+    }
+
+    // Optionally, delete OTP after verification
+    await this.authRepo.deleteOtp(record._id);
     const payload = {
-      userId: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
+      userId: record.userId,
+      fullName: record.fullName,
+      email: record.email,
+      role: record.role,
     };
 
     const accessToken: string = await this.jwtUtils.generateAccessToken(
@@ -73,95 +104,35 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
-  };
-
-  async sendOtp(email: string) {
-    const user = await this.userRepo.findUserByEmail(email);
-
-    if (!user) {
-      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
-    }
-    const otp = Math.floor(1000 + Math.random() * 9000); // 4-digit OTP
-
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
-
-    // Save or update OTP in DB
-
-    try {
-      const result = this.mailerUtils.sendOtp(email, otp);
-      const insertedOtp = await this.authRepo.createOtp(email, otp, expiresAt);
-      return {
-        success: true,
-        data: insertedOtp,
-        message: "OTP sent successfully",
-      };
-    } catch (error) {
-      console.error("Email error:", error);
-      return { success: false, message: "Failed to send OTP" };
-    }
   }
 
-  async verifyOtp(email: string, otp: string) {
-    logger.info(`from service layer - email: ${email}, otp: ${otp}`);
-    const record = await this.authRepo.matchOtp(email, Number(otp));
-    if (!record) {
-      return { success: false, message: "Invalid OTP" };
-    }
 
-    if (record.expiresAt < new Date()) {
-      return { success: false, message: "OTP expired" };
-    }
 
-    // Optionally, delete OTP after verification
-    await this.authRepo.deleteOtp(record._id);
+  // async refreshToken(refreshToken: string) {
+  //   const payload = await this.jwtUtils.verifyRefreshToken(refreshToken);
 
-    return { success: true, message: "OTP verified successfully" };
-  }
+  //   if (!payload || typeof payload === "string" || !("userId" in payload)) {
+  //     throw new apiError(Errors.NoToken.code, "Invalid token payload");
+  //   }
 
-  async setNewPassword(email: string, newPassword: string) {
-    logger.info(
-      `from service layer - email: ${email}, newPassword: ${newPassword}`
-    );
-    // Find user by email
-    const user = await this.userRepo.findUserByEmail(email);
-    if (!user) {
-      return { success: false, message: "User not found" };
-    }
+  //   const user = await this.userRepo.findUserById(payload.userId);
 
-    // Hash new password
-    const hashedPassword = await this.hashUtils.hashPassword(newPassword);
+  //   if (!user) {
+  //     throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+  //   }
 
-    // Update user password
-    await this.userRepo.updateUserPassword(user._id, hashedPassword);
+  //   const tokenPayload = {
+  //     userId: user._id,
+  //     fullName: user.fullName,
+  //     email: user.email,
+  //     role: user.role,
+  //   };
 
-    return { success: true, message: "Password updated successfully" };
-  }
+  //   const tokens = await this.jwtUtils.generateBothTokens(tokenPayload);
 
-  async refreshToken(refreshToken: string) {
-    const payload = await this.jwtUtils.verifyRefreshToken(refreshToken);
-
-    if (!payload || typeof payload === "string" || !("userId" in payload)) {
-      throw new apiError(Errors.NoToken.code, "Invalid token payload");
-    }
-
-    const user = await this.userRepo.findUserById(payload.userId);
-
-    if (!user) {
-      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
-    }
-
-    const tokenPayload = {
-      userId: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-    };
-
-    const tokens = await this.jwtUtils.generateBothTokens(tokenPayload);
-
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    };
-  }
+  //   return {
+  //     accessToken: tokens.accessToken,
+  //     refreshToken: tokens.refreshToken,
+  //   };
+  // }
 }

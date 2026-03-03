@@ -11,7 +11,7 @@ export class AuthRepository {
     return record;
   };
 
-  matchOtp = async (email: string, otp: number) => {
+  verifyOtp = async (email: string, otp: number) => {
     const record = await OTPModel.findOne({ email, otp });
     return record;
   };
