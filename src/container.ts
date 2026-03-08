@@ -9,11 +9,13 @@ import { AuthRepository } from "./modules/auth/auth.repository";
 import { AuthService } from "./modules/auth/auth.service";
 import { AuthController } from "./modules/auth/auth.controller";
 import { buildDynamicSearch } from "./utils/dynamic-search-utils";
+import { OrderRepository } from "./modules/order/order.repository";
+import { OrderService } from "./modules/order/order.service";
+import { OrderController } from "./modules/order/order.controller";
 
 export const hashUtils = new HashUtils();
 export const jwtUtils = new JwtUtils();
 export const mailer = new Mailer();
-
 
 export const userRepository = new UserRepository(buildDynamicSearch);
 export const userService = new UserService(userRepository, hashUtils, mailer);
@@ -30,4 +32,6 @@ export const authService = new AuthService(
 export const authMiddleware = new AuthMiddleware(jwtUtils, userRepository);
 export const authController = new AuthController(authService);
 
-
+export const orderRepository = new OrderRepository();
+export const orderService = new OrderService(orderRepository, userRepository);
+export const orderController = new OrderController(orderService);
