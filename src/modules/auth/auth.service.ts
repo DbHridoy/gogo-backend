@@ -84,25 +84,25 @@ export class AuthService {
 
     // Optionally, delete OTP after verification
     await this.authRepo.deleteOtp(record._id);
-    const payload = {
-      userId: record.userId,
-      fullName: record.fullName,
-      email: record.email,
-      role: record.role,
-    };
+    // const payload = {
+    //   userId: record.userId,
+    //   fullName: record.fullName,
+    //   email: record.email,
+    //   role: record.role,
+    // };
 
-    const accessToken: string = await this.jwtUtils.generateAccessToken(
-      payload
-    );
+    // const accessToken: string = await this.jwtUtils.generateAccessToken(
+    //   payload
+    // );
 
-    const refreshToken: string = await this.jwtUtils.generateRefreshToken(
-      payload
-    );
+    // const refreshToken: string = await this.jwtUtils.generateRefreshToken(
+    //   payload
+    // );
 
     return {
-      user,
-      accessToken,
-      refreshToken,
+      // user,
+      // accessToken,
+      // refreshToken,
     };
   }
 

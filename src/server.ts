@@ -1,12 +1,16 @@
+import { createServer } from "http";
 import app from "./app";
 import connectDB from "./config/database";
 import { env } from "./config/env";
 import { logger } from "./utils/logger";
+import { initSocket } from "./config/socket";
 
 const startServer = async () => {
   try {
     await connectDB(env.DB_URL);
-    app.listen(env.PORT, () => {
+    const server = createServer(app);
+    initSocket(server);
+    server.listen(env.PORT, () => {
       logger.info(
         `Server is running on port http://localhost:${env.PORT}/api/v1`
       );

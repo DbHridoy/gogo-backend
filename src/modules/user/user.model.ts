@@ -46,6 +46,11 @@ const userSchema = new Schema(
         return this.role === "Rider";
       },
     },
+    location: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+      updatedAt: { type: Date },
+    },
   },
   {
     timestamps: true,
