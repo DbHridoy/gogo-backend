@@ -28,6 +28,20 @@ const userSchema = new Schema(
     },
     referralCode: {
       type: String,
+      index: true,
+      unique: true,
+      sparse: true,
+      uppercase: true,
+      trim: true,
+    },
+    referredByReferralCode: {
+      type: String,
+      uppercase: true,
+      trim: true,
+    },
+    referralDiscountUsed: {
+      type: Boolean,
+      default: false,
     },
     role: {
       type: String,

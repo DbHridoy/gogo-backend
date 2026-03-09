@@ -1,6 +1,10 @@
 import Order from "./order.model";
 
 export class OrderRepository {
+  countOrdersByUser = async (userId: string) => {
+    return Order.countDocuments({ user: userId });
+  };
+
   createOrder = async (payload: any) => {
     const order = new Order(payload);
     await order.save();

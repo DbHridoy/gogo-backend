@@ -40,6 +40,24 @@ const orderSchema = new Schema(
       required: true,
       min: 0,
     },
+    originalPrice: {
+      type: Number,
+      min: 0,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    discountType: {
+      type: String,
+      enum: ["ReferralFirstOrder"],
+    },
+    vehicleType: {
+      type: String,
+      enum: ["Bike", "Car", "Truck"],
+      default: "Bike",
+    },
     distanceKm: {
       type: Number,
       min: 0,

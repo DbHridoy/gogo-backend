@@ -3,6 +3,8 @@ import { Errors } from "../../constants/error-codes";
 import { OrderRepository } from "./order.repository";
 import { UserRepository } from "../user/user.repository";
 
+const REFERRAL_FIRST_ORDER_DISCOUNT = 10;
+
 const VALID_TRANSITIONS: Record<string, string[]> = {
   Pending: ["Accepted", "Cancelled"],
   Accepted: ["ArrivedPickup", "Cancelled"],
@@ -41,11 +43,29 @@ export class OrderService {
       }
     }
 
+    const existingOrderCount = await this.orderRepo.countOrdersByUser(ownerUserId);
+    const eligibleForReferralDiscount =
+      existingOrderCount === 0 &&
+      !!user.referredByReferralCode &&
+      !user.referralDiscountUsed;
+
+    const discountAmount = eligibleForReferralDiscount
+      ? Math.min(REFERRAL_FIRST_ORDER_DISCOUNT, payload.price)
+      : 0;
+
     const order = await this.orderRepo.createOrder({
       ...payload,
+      originalPrice: payload.price,
+      price: payload.price - discountAmount,
+      discountAmount,
+      discountType: discountAmount > 0 ? "ReferralFirstOrder" : undefined,
       user: ownerUserId,
       status: payload.rider ? "Accepted" : "Pending",
     });
+
+    if (discountAmount > 0) {
+      await this.userRepo.updateUser(ownerUserId, { referralDiscountUsed: true });
+    }
 
     return this.orderRepo.getOrderById(String(order._id));
   };

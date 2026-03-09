@@ -2,6 +2,7 @@ import { logger, logger as consoleLogger } from "../../utils/logger";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { AuthRepository } from "./auth.repository";
 import { UserRepository } from "../user/user.repository";
 import { createUserType } from "./auth.type";
@@ -13,19 +14,59 @@ export class AuthService {
 
   constructor(private authRepo: AuthRepository, private userRepo: UserRepository, private hashUtils: HashUtils, private jwtUtils: JwtUtils, private mailerUtils: Mailer) { }
 
-  register = async (userBody: createUserType) => {
+  private generateReferralCodeValue() {
+    return `REF-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+  }
 
+  private generateUniqueReferralCode = async () => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const referralCode = this.generateReferralCodeValue();
+      const existingUser = await this.userRepo.findUserByReferralCode(referralCode);
+
+      if (!existingUser) {
+        return referralCode;
+      }
+    }
+
+    throw new apiError(
+      500,
+      "Failed to generate referral code"
+    );
+  };
+
+  register = async (userBody: createUserType) => {
     logger.info({ userBody }, "UserBody");
 
-    await this.sendOtp(userBody.phoneNumber);
+    const existingUser = await this.userRepo.findUserByEmail(userBody.email);
+
+    if (existingUser) {
+      throw new apiError(
+        Errors.AlreadyExists.code,
+        "User already exists with this email"
+      );
+    }
+
+    const usedReferralCode = userBody.referralCode?.trim().toUpperCase();
+
+    if (usedReferralCode) {
+      const referrer = await this.userRepo.findUserByReferralCode(usedReferralCode);
+
+      if (!referrer) {
+        throw new apiError(400, "Invalid referral code");
+      }
+    }
 
     const user = {
       ...userBody,
+      referralCode: await this.generateUniqueReferralCode(),
+      referredByReferralCode: usedReferralCode,
     };
 
     logger.info({ user }, "user");
 
     const newUser = await this.userRepo.createUser(user);
+
+    await this.sendOtp(userBody.phoneNumber);
 
     return newUser;
   };

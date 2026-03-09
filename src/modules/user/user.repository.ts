@@ -21,6 +21,10 @@ export class UserRepository {
     return user;
   };
 
+  findUserByReferralCode = async (referralCode: string) => {
+    return await User.findOne({ referralCode: referralCode.toUpperCase() }).lean();
+  };
+
   createUser = async (userBody: any) => {
     logger.info({ userBody }, "UserRepository - createUser");
 

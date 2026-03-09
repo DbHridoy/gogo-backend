@@ -28,6 +28,11 @@ const envSchema = z.object({
   S3_BUCKET_NAME: z.string().min(1, "AWS bucket name required"),
   ADMIN_EMAIL: z.string().email("Admin email must be valid"),
   ADMIN_PASSWORD: z.string().min(1, "Admin password required"),
+  TAP_SECRET_KEY: z.string().default(""),
+  TAP_API_BASE_URL: z.string().default("https://api.tap.company/v2"),
+  TAP_REDIRECT_URL: z
+    .string()
+    .default("http://localhost:5173/payment/callback"),
 });
 
 export const env = envSchema.parse(process.env);
