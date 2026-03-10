@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddleware, orderController } from "../../container";
 import { validate } from "../../middlewares/validate.middleware";
 import {
+  AddOrderReviewSchema,
   AssignRiderSchema,
   CreateOrderSchema,
   UpdateOrderPriceSchema,
@@ -31,6 +32,11 @@ orderRoute.patch(
   authMiddleware.authorize(["Admin"]),
   validate(UpdateOrderPriceSchema),
   orderController.updateOrderPrice
+);
+orderRoute.patch(
+  "/:id/review",
+  validate(AddOrderReviewSchema),
+  orderController.addReview
 );
 orderRoute.patch("/:id/cancel", orderController.cancelOrder);
 

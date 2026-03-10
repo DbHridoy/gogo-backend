@@ -2,7 +2,7 @@ import { UserRepository } from "./user.repository";
 import { logger } from "../../utils/logger";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
-import { createUserType } from "./user.type";
+import { createUserType, saveAddressType, updateSavedAddressType } from "./user.type";
 import { hashUtils } from "../../container";
 import { mailer } from "../../container";
 import { HashUtils } from "../../utils/hash-utils";
@@ -63,4 +63,66 @@ export class UserService {
   deleteUser = async (id: string) => {
     return await this.userRepo.deleteUser(id)
   }
+
+  getSavedAddresses = async (id: string) => {
+    const user = await this.userRepo.findUserById(id);
+
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+    }
+
+    return user.savedAddresses || [];
+  };
+
+  addSavedAddress = async (id: string, body: saveAddressType) => {
+    if (body.isDefault) {
+      await this.userRepo.clearDefaultSavedAddresses(id);
+    }
+
+    const user = await this.userRepo.addSavedAddress(id, body);
+
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+    }
+
+    return user.savedAddresses;
+  };
+
+  updateSavedAddress = async (
+    id: string,
+    addressId: string,
+    body: updateSavedAddressType
+  ) => {
+    if (body.isDefault) {
+      await this.userRepo.clearDefaultSavedAddresses(id);
+    }
+
+    const user = await this.userRepo.updateSavedAddress(id, addressId, body);
+
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, "Saved address not found");
+    }
+
+    return user.savedAddresses;
+  };
+
+  deleteSavedAddress = async (id: string, addressId: string) => {
+    const existingUser = await this.userRepo.findUserById(id);
+
+    if (!existingUser) {
+      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+    }
+
+    const addressExists = (existingUser.savedAddresses || []).some(
+      (address: any) => String(address._id) === addressId
+    );
+
+    if (!addressExists) {
+      throw new apiError(Errors.NotFound.code, "Saved address not found");
+    }
+
+    const user = await this.userRepo.removeSavedAddress(id, addressId);
+
+    return user?.savedAddresses || [];
+  };
 }

@@ -10,7 +10,7 @@ import {
   TypedRequestBody,
   TypedRequestBodyWithFile,
 } from "../../types/request.type";
-import { createUserType } from "./user.type";
+import { createUserType, saveAddressType, updateSavedAddressType } from "./user.type";
 
 export class UserController {
   constructor(private userService: UserService) { }
@@ -136,6 +136,89 @@ export class UserController {
         success: true,
         message: "Profile updated successfully",
         data: updatedUser,
+      });
+    }
+  );
+
+  getSavedAddresses = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      }
+
+      const addresses = await this.userService.getSavedAddresses(userId);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Saved addresses fetched successfully",
+        data: addresses,
+      });
+    }
+  );
+
+  addSavedAddress = asyncHandler(
+    async (
+      req: TypedRequestBody<saveAddressType>,
+      res: Response,
+      _next: NextFunction
+    ) => {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      }
+
+      const addresses = await this.userService.addSavedAddress(userId, req.body);
+
+      res.status(HttpCodes.Created).json({
+        success: true,
+        message: "Address saved successfully",
+        data: addresses,
+      });
+    }
+  );
+
+  updateSavedAddress = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      }
+
+      const addresses = await this.userService.updateSavedAddress(
+        userId,
+        req.params.addressId,
+        req.body
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Saved address updated successfully",
+        data: addresses,
+      });
+    }
+  );
+
+  deleteSavedAddress = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      }
+
+      const addresses = await this.userService.deleteSavedAddress(
+        userId,
+        req.params.addressId
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Saved address deleted successfully",
+        data: addresses,
       });
     }
   );

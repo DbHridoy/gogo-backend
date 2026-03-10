@@ -1,6 +1,30 @@
 import Payment from "./payment.model";
 
 export class PaymentRepository {
+  getPaymentsByUserId = async (userId: string, query: any) => {
+    const page = Number(query.page) > 0 ? Number(query.page) : 1;
+    const limit = Number(query.limit) > 0 ? Number(query.limit) : 20;
+    const skip = (page - 1) * limit;
+
+    const filter: any = { user: userId };
+
+    if (query.status) {
+      filter.status = query.status;
+    }
+
+    const [data, total] = await Promise.all([
+      Payment.find(filter)
+        .populate("user", "firstName lastName email phoneNumber role")
+        .populate("order")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Payment.countDocuments(filter),
+    ]);
+
+    return { data, total, page, limit };
+  };
+
   createPayment = async (payload: any) => {
     const payment = new Payment(payload);
     await payment.save();

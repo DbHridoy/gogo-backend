@@ -1,5 +1,34 @@
 import { Schema, model } from "mongoose";
 
+const savedAddressSchema = new Schema(
+  {
+    label: {
+      type: String,
+      trim: true,
+    },
+    addressLine: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    latitude: {
+      type: Number,
+      required: true,
+    },
+    longitude: {
+      type: Number,
+      required: true,
+    },
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const userSchema = new Schema(
   {
     firstName: {
@@ -64,6 +93,10 @@ const userSchema = new Schema(
       latitude: { type: Number },
       longitude: { type: Number },
       updatedAt: { type: Date },
+    },
+    savedAddresses: {
+      type: [savedAddressSchema],
+      default: [],
     },
   },
   {

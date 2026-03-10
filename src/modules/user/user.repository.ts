@@ -70,6 +70,41 @@ export class UserRepository {
     return await User.findByIdAndUpdate(id, body, { new: true });
   };
 
+  addSavedAddress = async (id: string, address: any) => {
+    return await User.findByIdAndUpdate(
+      id,
+      { $push: { savedAddresses: address } },
+      { new: true }
+    );
+  };
+
+  clearDefaultSavedAddresses = async (id: string) => {
+    return await User.updateOne(
+      { _id: id },
+      { $set: { "savedAddresses.$[].isDefault": false } }
+    );
+  };
+
+  updateSavedAddress = async (id: string, addressId: string, body: any) => {
+    const updatePayload = Object.fromEntries(
+      Object.entries(body).map(([key, value]) => [`savedAddresses.$.${key}`, value])
+    );
+
+    return await User.findOneAndUpdate(
+      { _id: id, "savedAddresses._id": addressId },
+      { $set: updatePayload },
+      { new: true }
+    );
+  };
+
+  removeSavedAddress = async (id: string, addressId: string) => {
+    return await User.findByIdAndUpdate(
+      id,
+      { $pull: { savedAddresses: { _id: addressId } } },
+      { new: true }
+    );
+  };
+
   deleteUser = async (id: string) => {
     return await User.findByIdAndDelete(id);
   };

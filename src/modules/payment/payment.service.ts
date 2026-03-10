@@ -264,4 +264,16 @@ export class PaymentService {
 
     return this.paymentRepo.getPaymentsByOrderId(orderId);
   };
+
+  getMyPaymentHistory = async (currentUser: any, query: any) => {
+    if (currentUser.role === "Admin") {
+      if (query.userId) {
+        return this.paymentRepo.getPaymentsByUserId(query.userId, query);
+      }
+
+      throw new apiError(400, "userId is required for admin payment history lookup");
+    }
+
+    return this.paymentRepo.getPaymentsByUserId(currentUser.userId, query);
+  };
 }

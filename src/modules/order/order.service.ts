@@ -208,6 +208,41 @@ export class OrderService {
     return this.orderRepo.updateOrder(orderId, { status: "Cancelled" });
   };
 
+  addReview = async (
+    currentUser: any,
+    orderId: string,
+    payload: { rating: number; comment?: string }
+  ) => {
+    const order = await this.orderRepo.getOrderById(orderId);
+
+    if (!order) {
+      throw new apiError(Errors.NotFound.code, "Order not found");
+    }
+
+    if (String(order.user?._id || order.user) !== currentUser.userId) {
+      throw new apiError(
+        Errors.Forbidden.code,
+        "Only the customer can review this order"
+      );
+    }
+
+    if (order.status !== "Completed") {
+      throw new apiError(400, "Review can only be added after order completion");
+    }
+
+    if (order.review) {
+      throw new apiError(400, "Review already submitted for this order");
+    }
+
+    return this.orderRepo.updateOrder(orderId, {
+      review: {
+        rating: payload.rating,
+        comment: payload.comment,
+        reviewedAt: new Date(),
+      },
+    });
+  };
+
   deleteOrder = async (currentUser: any, id: string) => {
     if (currentUser.role !== "Admin") {
       throw new apiError(Errors.Forbidden.code, "Only admin can delete order");

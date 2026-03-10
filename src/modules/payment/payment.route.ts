@@ -14,6 +14,7 @@ paymentRoute.post(
   validate(InitiatePaymentSchema),
   paymentController.initiatePayment
 );
+paymentRoute.get("/history", paymentController.getMyPaymentHistory);
 paymentRoute.post("/verify", validate(VerifyPaymentSchema), paymentController.verifyPayment);
 paymentRoute.get("/order/:orderId", paymentController.getPaymentsByOrderId);
 paymentRoute.get("/:id", paymentController.getPaymentById);

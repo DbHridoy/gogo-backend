@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { validate } from "../../middlewares/validate.middleware";
-import { CreateUserSchema, UpdateUserSchemaForOtherRoles } from "./user.schema";
+import {
+  CreateUserSchema,
+  SaveAddressSchema,
+  UpdateSavedAddressSchema,
+  UpdateUserSchemaForOtherRoles,
+} from "./user.schema";
 import { authMiddleware, userController } from "../../container";
 import { uploadFile } from "../../middlewares/upload.middleware";
 
@@ -27,6 +32,18 @@ userRoute.patch(
   }),
   userController.updateMyProfile
 );
+userRoute.get("/me/addresses", userController.getSavedAddresses);
+userRoute.post(
+  "/me/addresses",
+  validate(SaveAddressSchema),
+  userController.addSavedAddress
+);
+userRoute.patch(
+  "/me/addresses/:addressId",
+  validate(UpdateSavedAddressSchema),
+  userController.updateSavedAddress
+);
+userRoute.delete("/me/addresses/:addressId", userController.deleteSavedAddress);
 
 userRoute.patch(
   "/:id",

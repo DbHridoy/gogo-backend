@@ -150,6 +150,26 @@ export class OrderController {
     }
   );
 
+  addReview = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      if (!req.user) {
+        throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      }
+
+      const order = await this.orderService.addReview(
+        req.user,
+        req.params.id,
+        req.body
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Order review submitted successfully",
+        data: order,
+      });
+    }
+  );
+
   deleteOrder = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
       if (!req.user) {

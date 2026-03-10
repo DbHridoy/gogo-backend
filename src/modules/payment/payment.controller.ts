@@ -89,4 +89,26 @@ export class PaymentController {
       });
     }
   );
+
+  getMyPaymentHistory = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      if (!req.user) {
+        throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      }
+
+      const payments = await this.paymentService.getMyPaymentHistory(
+        req.user,
+        req.query
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Payment history fetched successfully",
+        data: payments.data,
+        total: payments.total,
+        page: payments.page,
+        limit: payments.limit,
+      });
+    }
+  );
 }

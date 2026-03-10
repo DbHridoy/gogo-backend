@@ -36,3 +36,8 @@ export const UpdateOrderStatusSchema = z.object({
 export const UpdateOrderPriceSchema = z.object({
   price: z.number().min(0),
 });
+
+export const AddOrderReviewSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().trim().optional(),
+});

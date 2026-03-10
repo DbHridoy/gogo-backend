@@ -9,6 +9,26 @@ const geoPointSchema = new Schema(
   { _id: false }
 );
 
+const orderReviewSchema = new Schema(
+  {
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    comment: {
+      type: String,
+      trim: true,
+    },
+    reviewedAt: {
+      type: Date,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const orderSchema = new Schema(
   {
     user: {
@@ -83,6 +103,10 @@ const orderSchema = new Schema(
     notes: {
       type: String,
       trim: true,
+    },
+    review: {
+      type: orderReviewSchema,
+      default: null,
     },
   },
   {
