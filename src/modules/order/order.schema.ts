@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const geoPointSchema = z.object({
   label: z.string().trim().optional(),
+  addressLine: z.string().trim().optional(),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
 });
@@ -15,6 +16,7 @@ export const CreateOrderSchema = z.object({
   price: z.number().min(0),
   distanceKm: z.number().min(0).optional(),
   paymentStatus: z.enum(["Unpaid", "Paid", "Refunded"]).optional(),
+  vehicleType: z.enum(["Bike", "Car", "Truck"]).optional(),
   notes: z.string().trim().optional(),
 });
 
@@ -41,3 +43,19 @@ export const AddOrderReviewSchema = z.object({
   rating: z.number().min(1).max(5),
   comment: z.string().trim().optional(),
 });
+
+export const MarkCheckpointSchema = z
+  .object({
+    pointType: z.enum(["pickup", "stoppage", "dropoff"]),
+    stoppageId: z.string().optional(),
+    note: z.string().trim().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.pointType === "stoppage" && !data.stoppageId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["stoppageId"],
+        message: "stoppageId is required when pointType is stoppage",
+      });
+    }
+  });

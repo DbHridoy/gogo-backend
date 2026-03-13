@@ -10,7 +10,7 @@ import {
   TypedRequestBody,
   TypedRequestBodyWithFile,
 } from "../../types/request.type";
-import { createUserType, saveAddressType, updateSavedAddressType } from "./user.type";
+import { createUserType, saveAddressType } from "./user.type";
 
 export class UserController {
   constructor(private userService: UserService) { }

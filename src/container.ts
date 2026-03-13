@@ -24,14 +24,13 @@ export const jwtUtils = new JwtUtils();
 export const mailer = new Mailer();
 
 export const userRepository = new UserRepository(buildDynamicSearch);
-export const userService = new UserService(userRepository, hashUtils, mailer);
+export const userService = new UserService(userRepository);
 export const userController = new UserController(userService);
 
 export const authRepo = new AuthRepository();
 export const authService = new AuthService(
   authRepo,
   userRepository,
-  hashUtils,
   jwtUtils,
   mailer
 );

@@ -1,4 +1,4 @@
-import { Notification } from "../modules/common/notification.model";
+import Notification from "../modules/notification/notification.model";
 import { Document } from "mongoose";
 import User from "../modules/user/user.model";
 
@@ -41,7 +41,7 @@ export const createNotificationsForUsers = async (
 };
 
 export const createNotificationsForRole = async (
-  role: "Admin" | "Sales Rep" | "Production Manager",
+  role: "Admin" | "User" | "Rider",
   input: Omit<CreateNotificationsForUsersInput, "userIds">
 ) => {
   const users = await User.find({ role }).select("_id");

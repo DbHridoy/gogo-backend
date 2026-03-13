@@ -5,6 +5,7 @@ import {
   AddOrderReviewSchema,
   AssignRiderSchema,
   CreateOrderSchema,
+  MarkCheckpointSchema,
   UpdateOrderPriceSchema,
   UpdateOrderStatusSchema,
 } from "./order.schema";
@@ -13,6 +14,7 @@ const orderRoute = Router();
 
 orderRoute.use(authMiddleware.authenticate);
 
+orderRoute.get("/summary", orderController.getOrderSummary);
 orderRoute.post("/", validate(CreateOrderSchema), orderController.createOrder);
 orderRoute.get("/", orderController.getAllOrders);
 orderRoute.get("/:id", orderController.getOrderById);
@@ -26,6 +28,11 @@ orderRoute.patch(
   "/:id/status",
   validate(UpdateOrderStatusSchema),
   orderController.updateOrderStatus
+);
+orderRoute.patch(
+  "/:id/checkpoints",
+  validate(MarkCheckpointSchema),
+  orderController.markCheckpointReached
 );
 orderRoute.patch(
   "/:id/price",

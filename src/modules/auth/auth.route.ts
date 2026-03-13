@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { validate } from "../../middlewares/validate.middleware";
-import { createUserSchema, loginUserSchema } from "./auth.schema";
+import { createUserSchema, loginUserSchema, verifyOtpSchema } from "./auth.schema";
 import { authController } from "../../container";
 
 const authRoute = Router();
@@ -14,7 +14,7 @@ authRoute.post(
 
 authRoute.post("/login", validate(loginUserSchema), authController.loginUser);
 
-authRoute.post("/verify-otp", authController.verifyOtp);
+authRoute.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
 // authRoute.post("/send-otp", authController.sendOtp);
 // authRoute.post("/set-new-password", authController.setNewPassword);
 // authRoute.post("/refresh-token", authController.refreshToken);

@@ -1,18 +1,20 @@
 import { logger, logger as consoleLogger } from "../../utils/logger";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
-import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { AuthRepository } from "./auth.repository";
 import { UserRepository } from "../user/user.repository";
 import { createUserType } from "./auth.type";
-import { HashUtils } from "../../utils/hash-utils";
 import { JwtUtils } from "../../utils/jwt-utils";
 import { Mailer } from "../../utils/mailer-utils";
 
 export class AuthService {
-
-  constructor(private authRepo: AuthRepository, private userRepo: UserRepository, private hashUtils: HashUtils, private jwtUtils: JwtUtils, private mailerUtils: Mailer) { }
+  constructor(
+    private authRepo: AuthRepository,
+    private userRepo: UserRepository,
+    private jwtUtils: JwtUtils,
+    private mailerUtils: Mailer
+  ) {}
 
   private generateReferralCodeValue() {
     return `REF-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
@@ -33,6 +35,13 @@ export class AuthService {
       "Failed to generate referral code"
     );
   };
+
+  private buildTokenPayload = (user: any) => ({
+    userId: String(user._id),
+    fullName: `${user.firstName} ${user.lastName}`.trim(),
+    email: user.email,
+    role: user.role,
+  });
 
   register = async (userBody: createUserType) => {
     logger.info({ userBody }, "UserBody");
@@ -68,7 +77,10 @@ export class AuthService {
 
     await this.sendOtp(userBody.phoneNumber);
 
-    return newUser;
+    return {
+      user: newUser,
+      otpSent: true,
+    };
   };
 
   loginUser = async (phoneNumber: string) => {
@@ -76,15 +88,7 @@ export class AuthService {
     if (!user) {
       throw new apiError(Errors.NotFound.code, "User not found");
     }
-    // const isVerified = bcrypt.compareSync(password, user.password);
-    // logger.info({isVerified}, "Authservice.loginUser line:51");
-    // if (!isVerified) {
-    //   throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
-    // }
-
     return await this.sendOtp(phoneNumber);
-
-
   };
 
   async sendOtp(phoneNumber: string) {
@@ -100,7 +104,7 @@ export class AuthService {
     // Save or update OTP in DB
 
     try {
-      const result = await this.mailerUtils.sendOtp(phoneNumber, otp);
+      await this.mailerUtils.sendOtp(user.email, otp);
       const insertedOtp = await this.authRepo.createOtp(phoneNumber, otp, expiresAt);
       return {
         success: true,
@@ -116,64 +120,29 @@ export class AuthService {
   async verifyOtp(phoneNumber: string, otp: string) {
     const record = await this.authRepo.verifyOtp(phoneNumber, Number(otp));
     if (!record) {
-      return { success: false, message: "Invalid OTP" };
+      throw new apiError(400, "Invalid OTP");
     }
 
     if (record.expiresAt < new Date()) {
-      return { success: false, message: "OTP expired" };
+      throw new apiError(400, "OTP expired");
     }
 
-    // Optionally, delete OTP after verification
     await this.authRepo.deleteOtp(record._id);
-    // const payload = {
-    //   userId: record.userId,
-    //   fullName: record.fullName,
-    //   email: record.email,
-    //   role: record.role,
-    // };
+    const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
 
-    // const accessToken: string = await this.jwtUtils.generateAccessToken(
-    //   payload
-    // );
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, "User not found");
+    }
 
-    // const refreshToken: string = await this.jwtUtils.generateRefreshToken(
-    //   payload
-    // );
+    const payload = this.buildTokenPayload(user);
+    const { accessToken, refreshToken } = await this.jwtUtils.generateBothTokens(
+      payload
+    );
 
     return {
-      // user,
-      // accessToken,
-      // refreshToken,
+      user,
+      accessToken,
+      refreshToken,
     };
   }
-
-
-
-  // async refreshToken(refreshToken: string) {
-  //   const payload = await this.jwtUtils.verifyRefreshToken(refreshToken);
-
-  //   if (!payload || typeof payload === "string" || !("userId" in payload)) {
-  //     throw new apiError(Errors.NoToken.code, "Invalid token payload");
-  //   }
-
-  //   const user = await this.userRepo.findUserById(payload.userId);
-
-  //   if (!user) {
-  //     throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
-  //   }
-
-  //   const tokenPayload = {
-  //     userId: user._id,
-  //     fullName: user.fullName,
-  //     email: user.email,
-  //     role: user.role,
-  //   };
-
-  //   const tokens = await this.jwtUtils.generateBothTokens(tokenPayload);
-
-  //   return {
-  //     accessToken: tokens.accessToken,
-  //     refreshToken: tokens.refreshToken,
-  //   };
-  // }
 }

@@ -2,17 +2,17 @@ import { Types } from "mongoose";
 import OTPModel from "./otp.model";
 
 export class AuthRepository {
-  createOtp = async (email: string, otp: number, expiresAt: Date) => {
+  createOtp = async (phoneNumber: string, otp: number, expiresAt: Date) => {
     const record = await OTPModel.findOneAndUpdate(
-      { email },
+      { phoneNumber },
       { otp, expiresAt },
       { upsert: true, new: true }
     );
     return record;
   };
 
-  verifyOtp = async (email: string, otp: number) => {
-    const record = await OTPModel.findOne({ email, otp });
+  verifyOtp = async (phoneNumber: string, otp: number) => {
+    const record = await OTPModel.findOne({ phoneNumber, otp });
     return record;
   };
 

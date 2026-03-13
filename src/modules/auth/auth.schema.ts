@@ -33,6 +33,10 @@ export const createUserSchema = z
   });
 
 export const loginUserSchema = z.object({
-  email: z.email(),
-  password: z.string(),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+});
+
+export const verifyOtpSchema = z.object({
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  otp: z.string().regex(/^\d{4}$/, "OTP must be 4 digits"),
 });

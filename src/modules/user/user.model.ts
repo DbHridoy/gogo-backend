@@ -49,6 +49,10 @@ const userSchema = new Schema(
       index: true,
       unique: true,
     },
+    profileImage: {
+      type: String,
+      trim: true,
+    },
     companyName: {
       type: String,
     },

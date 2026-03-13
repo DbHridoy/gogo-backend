@@ -3,8 +3,58 @@ import { Schema, model, Types } from "mongoose";
 const geoPointSchema = new Schema(
   {
     label: { type: String },
+    addressLine: { type: String },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
+const routeCheckpointSchema = new Schema(
+  {
+    label: { type: String },
+    addressLine: { type: String },
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+    sequence: { type: Number, required: true },
+    reachedAt: { type: Date, default: null },
+  },
+  { timestamps: false }
+);
+
+const statusHistorySchema = new Schema(
+  {
+    status: {
+      type: String,
+      enum: [
+        "Pending",
+        "Accepted",
+        "ArrivedPickup",
+        "InProgress",
+        "Completed",
+        "Cancelled",
+      ],
+      required: true,
+    },
+    changedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+    note: {
+      type: String,
+      trim: true,
+    },
+    changedBy: {
+      type: Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    actorRole: {
+      type: String,
+      enum: ["Admin", "User", "Rider"],
+      required: true,
+    },
   },
   { _id: false }
 );
@@ -52,7 +102,7 @@ const orderSchema = new Schema(
       required: true,
     },
     stoppages: {
-      type: [geoPointSchema],
+      type: [routeCheckpointSchema],
       default: [],
     },
     price: {
@@ -103,6 +153,34 @@ const orderSchema = new Schema(
     notes: {
       type: String,
       trim: true,
+    },
+    pickupReachedAt: {
+      type: Date,
+      default: null,
+    },
+    tripStartedAt: {
+      type: Date,
+      default: null,
+    },
+    dropoffReachedAt: {
+      type: Date,
+      default: null,
+    },
+    acceptedAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    statusHistory: {
+      type: [statusHistorySchema],
+      default: [],
     },
     review: {
       type: orderReviewSchema,

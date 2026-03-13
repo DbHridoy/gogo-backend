@@ -43,6 +43,22 @@ export class OrderController {
     }
   );
 
+  getOrderSummary = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      if (!req.user) {
+        throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      }
+
+      const summary = await this.orderService.getOrderSummary(req.user);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Order summary fetched successfully",
+        data: summary,
+      });
+    }
+  );
+
   getOrderById = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
       if (!req.user) {
@@ -181,6 +197,26 @@ export class OrderController {
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "Order deleted successfully",
+        data: order,
+      });
+    }
+  );
+
+  markCheckpointReached = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      if (!req.user) {
+        throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      }
+
+      const order = await this.orderService.markCheckpointReached(
+        req.user,
+        req.params.id,
+        req.body
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Trip checkpoint updated successfully",
         data: order,
       });
     }

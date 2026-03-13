@@ -4,7 +4,6 @@ import { logger } from "../../utils/logger";
 import { AuthService } from "./auth.service";
 import { HttpCodes } from "../../constants/status-codes";
 import { Errors } from "../../constants/error-codes";
-import { env } from "../../config/env";
 import { apiError } from "../../errors/api-error";
 
 export class AuthController {
@@ -27,9 +26,8 @@ export class AuthController {
     async (req: Request, res: Response, next: NextFunction) => {
       const body = req.body;
       logger.info(body, "Login body");
-      const user = await this.authService.loginUser(body.phoneNumber);
-
-  
+      const result = await this.authService.loginUser(body.phoneNumber);
+      res.status(HttpCodes.Ok).json(result);
     }
   );
 
@@ -45,19 +43,16 @@ export class AuthController {
 
   verifyOtp = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { email, otp } = req.body;
-      const record = await this.authService.verifyOtp(email, otp);
-      // Backend cookie (login or refresh)
+      const { phoneNumber, otp } = req.body;
+      const record = await this.authService.verifyOtp(phoneNumber, otp);
       res.cookie("refreshToken", record.refreshToken, {
         httpOnly: true,
-        secure: true, // HTTP in dev
-        sameSite: "none", // POST + GET works cross-port in dev
+        secure: false,
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        // path: "/auth/refresh-token",
       });
 
-      // Response
-      res.status(200).json({
+      res.status(HttpCodes.Ok).json({
         success: true,
         message: "Login successful",
         data: record,

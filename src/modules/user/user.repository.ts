@@ -6,19 +6,11 @@ export class UserRepository {
   constructor(private buildDynamicSearch: any) { }
 
   findUserById = async (id: string) => {
-    return await User.findById(id).populate("salesRep productionManager admin", "_id").lean();
+    return await User.findById(id).lean();
   };
 
   findUserByEmail = async (email: string) => {
-    const user = await User.findOne({ email })
-      .populate([
-        { path: "salesRep", select: "_id -userId" },
-        { path: "productionManager", select: "_id -userId" },
-        { path: "admin", select: "_id -userId" },
-      ])
-      .lean();
-
-    return user;
+    return await User.findOne({ email }).lean();
   };
 
   findUserByReferralCode = async (referralCode: string) => {
@@ -38,16 +30,13 @@ export class UserRepository {
     const { filter, search, options } = this.buildDynamicSearch(User, query);
 
     const baseQuery = {
-      role: { $ne: "admin" },
+      role: { $ne: "Admin" },
       ...filter,
       ...search,
     };
 
-    // Run both queries concurrently
     const [users, total] = await Promise.all([
-      User.find(baseQuery, null, options).populate(
-        "salesRep productionManager admin"
-      ),
+      User.find(baseQuery, null, options),
       User.countDocuments(baseQuery),
     ]);
 
@@ -110,6 +99,6 @@ export class UserRepository {
   };
 
   findUserByPhoneNumber = async (phoneNumber: string) => {
-    return await User.findOne({ phoneNumber });
+    return await User.findOne({ phoneNumber }).lean();
   };
 }

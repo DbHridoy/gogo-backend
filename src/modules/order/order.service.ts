@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
 import { OrderRepository } from "./order.repository";
@@ -19,6 +20,18 @@ export class OrderService {
     private orderRepo: OrderRepository,
     private userRepo: UserRepository
   ) {}
+
+  private buildStatusHistoryEntry = (
+    currentUser: any,
+    status: string,
+    note?: string
+  ) => ({
+    status,
+    changedAt: new Date(),
+    changedBy: currentUser?.userId || null,
+    actorRole: currentUser?.role || "Admin",
+    ...(note ? { note } : {}),
+  });
 
   createOrder = async (currentUser: any, payload: any) => {
     if (payload.price < 0) {
@@ -53,14 +66,27 @@ export class OrderService {
       ? Math.min(REFERRAL_FIRST_ORDER_DISCOUNT, payload.price)
       : 0;
 
+    const stoppages = (payload.stoppages || []).map((stoppage: any, index: number) => ({
+      ...stoppage,
+      sequence: index + 1,
+    }));
+
+    const initialStatus = payload.rider ? "Accepted" : "Pending";
+    const now = new Date();
+
     const order = await this.orderRepo.createOrder({
       ...payload,
+      stoppages,
       originalPrice: payload.price,
       price: payload.price - discountAmount,
       discountAmount,
       discountType: discountAmount > 0 ? "ReferralFirstOrder" : undefined,
       user: ownerUserId,
-      status: payload.rider ? "Accepted" : "Pending",
+      status: initialStatus,
+      acceptedAt: payload.rider ? now : null,
+      statusHistory: [
+        this.buildStatusHistoryEntry(currentUser, initialStatus, "Order created"),
+      ],
     });
 
     if (discountAmount > 0) {
@@ -78,10 +104,19 @@ export class OrderService {
     }
 
     if (currentUser.role === "Rider") {
-      scopedQuery.riderId = currentUser.userId;
+      if (query.scope === "available") {
+        scopedQuery.unassigned = true;
+        delete scopedQuery.riderId;
+      } else {
+        scopedQuery.riderId = currentUser.userId;
+      }
     }
 
     return this.orderRepo.getAllOrders(scopedQuery);
+  };
+
+  getOrderSummary = async (currentUser: any) => {
+    return this.orderRepo.getOrderSummary(currentUser);
   };
 
   getOrderById = async (currentUser: any, id: string) => {
@@ -94,7 +129,12 @@ export class OrderService {
     if (
       currentUser.role !== "Admin" &&
       String(order.user?._id || order.user) !== currentUser.userId &&
-      String(order.rider?._id || order.rider) !== currentUser.userId
+      String(order.rider?._id || order.rider) !== currentUser.userId &&
+      !(
+        currentUser.role === "Rider" &&
+        order.status === "Pending" &&
+        !order.rider
+      )
     ) {
       throw new apiError(Errors.Forbidden.code, "You do not have access to this order");
     }
@@ -127,10 +167,23 @@ export class OrderService {
       throw new apiError(400, "Invalid rider");
     }
 
-    return this.orderRepo.updateOrder(orderId, {
+    const updatePayload: Record<string, any> = {
       rider: riderId,
       status: order.status === "Pending" ? "Accepted" : order.status,
-    });
+      acceptedAt: order.status === "Pending" ? new Date() : order.acceptedAt,
+    };
+
+    if (order.status === "Pending") {
+      updatePayload.$push = {
+        statusHistory: this.buildStatusHistoryEntry(
+          currentUser,
+          "Accepted",
+          "Rider assigned"
+        ),
+      };
+    }
+
+    return this.orderRepo.updateOrder(orderId, updatePayload);
   };
 
   updateOrderStatus = async (
@@ -162,7 +215,31 @@ export class OrderService {
       );
     }
 
-    return this.orderRepo.updateOrder(orderId, { status });
+    const updatePayload: Record<string, any> = {
+      status,
+      $push: {
+        statusHistory: this.buildStatusHistoryEntry(currentUser, status),
+      },
+    };
+
+    if (status === "Accepted") {
+      updatePayload.acceptedAt = new Date();
+    }
+    if (status === "ArrivedPickup") {
+      updatePayload.pickupReachedAt = new Date();
+    }
+    if (status === "InProgress") {
+      updatePayload.tripStartedAt = new Date();
+    }
+    if (status === "Completed") {
+      updatePayload.completedAt = new Date();
+      updatePayload.dropoffReachedAt = new Date();
+    }
+    if (status === "Cancelled") {
+      updatePayload.cancelledAt = new Date();
+    }
+
+    return this.orderRepo.updateOrder(orderId, updatePayload);
   };
 
   updateOrderPrice = async (
@@ -205,7 +282,13 @@ export class OrderService {
       throw new apiError(400, `Order already ${order.status}`);
     }
 
-    return this.orderRepo.updateOrder(orderId, { status: "Cancelled" });
+    return this.orderRepo.updateOrder(orderId, {
+      status: "Cancelled",
+      cancelledAt: new Date(),
+      $push: {
+        statusHistory: this.buildStatusHistoryEntry(currentUser, "Cancelled"),
+      },
+    });
   };
 
   addReview = async (
@@ -254,5 +337,127 @@ export class OrderService {
     }
 
     return this.orderRepo.deleteOrder(id);
+  };
+
+  markCheckpointReached = async (
+    currentUser: any,
+    orderId: string,
+    payload: { pointType: "pickup" | "stoppage" | "dropoff"; stoppageId?: string; note?: string }
+  ) => {
+    const order = await this.orderRepo.getOrderById(orderId);
+
+    if (!order) {
+      throw new apiError(Errors.NotFound.code, "Order not found");
+    }
+
+    const assignedRiderId = order.rider ? String(order.rider) : null;
+
+    if (currentUser.role === "Rider" && assignedRiderId !== currentUser.userId) {
+      throw new apiError(Errors.Forbidden.code, "Only assigned rider can update checkpoints");
+    }
+
+    if (currentUser.role === "User") {
+      throw new apiError(Errors.Forbidden.code, "User cannot update trip checkpoints");
+    }
+
+    if (!assignedRiderId) {
+      throw new apiError(400, "A rider must be assigned before tracking trip progress");
+    }
+
+    const now = new Date();
+
+    if (payload.pointType === "pickup") {
+      if (order.status !== "Accepted") {
+        throw new apiError(400, "Pickup can only be marked after the order is accepted");
+      }
+
+      if (order.pickupReachedAt) {
+        throw new apiError(400, "Pickup is already marked as reached");
+      }
+
+      return this.orderRepo.updateOrder(orderId, {
+        status: "ArrivedPickup",
+        pickupReachedAt: now,
+        $push: {
+          statusHistory: this.buildStatusHistoryEntry(
+            currentUser,
+            "ArrivedPickup",
+            payload.note || "Rider reached pickup point"
+          ),
+        },
+      });
+    }
+
+    if (payload.pointType === "stoppage") {
+      if (!["ArrivedPickup", "InProgress"].includes(order.status)) {
+        throw new apiError(
+          400,
+          "Stoppages can only be marked after reaching the pickup point"
+        );
+      }
+
+      const stoppages = ((order as any).stoppages || []).map((stoppage: any) => ({
+        ...(typeof stoppage.toObject === "function" ? stoppage.toObject() : stoppage),
+      }));
+      const stoppage = stoppages.find(
+        (item: any) => String(item._id) === String(payload.stoppageId)
+      );
+
+      if (!stoppage) {
+        throw new apiError(404, "Stoppage not found");
+      }
+
+      if (stoppage.reachedAt) {
+        throw new apiError(400, "Stoppage already marked as reached");
+      }
+
+      stoppage.reachedAt = now;
+
+      return this.orderRepo.updateOrder(orderId, {
+        stoppages,
+        status: order.status === "ArrivedPickup" ? "InProgress" : order.status,
+        tripStartedAt: order.tripStartedAt || now,
+        $push: {
+          statusHistory: this.buildStatusHistoryEntry(
+            currentUser,
+            order.status === "ArrivedPickup" ? "InProgress" : order.status,
+            payload.note || `Reached stoppage ${stoppage.label || stoppage.sequence}`
+          ),
+        },
+      });
+    }
+
+    if (!["ArrivedPickup", "InProgress"].includes(order.status)) {
+      throw new apiError(
+        400,
+        "Drop-off can only be marked after reaching the pickup point"
+      );
+    }
+
+    const hasPendingStoppages = ((order as any).stoppages || []).some(
+      (stoppage: any) => !stoppage.reachedAt
+    );
+
+    if (hasPendingStoppages) {
+      throw new apiError(400, "All stoppages must be completed before drop-off");
+    }
+
+    if (order.dropoffReachedAt) {
+      throw new apiError(400, "Drop-off is already marked as reached");
+    }
+
+    return this.orderRepo.updateOrder(orderId, {
+      status: "Completed",
+      tripStartedAt: order.tripStartedAt || now,
+      dropoffReachedAt: now,
+      completedAt: now,
+      $push: {
+        statusHistory: this.buildStatusHistoryEntry(
+          currentUser,
+          "Completed",
+          payload.note || "Reached final drop-off point"
+        ),
+      },
+    });
   };
 }

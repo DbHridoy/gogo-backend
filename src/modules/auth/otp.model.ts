@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 
 const otpSchema = new Schema({
-  email: {
+  phoneNumber: {
     type: String,
     required: true,
   },

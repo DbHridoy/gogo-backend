@@ -1,20 +1,40 @@
 import { z } from "zod";
 
-// Base user schema
-const UserSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
+const BaseUserSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  phoneNumber: z.string().min(1),
+  email: z.email(),
+  profileImage: z.string().optional(),
+  companyName: z.string().optional(),
+  trnVatNo: z.string().optional(),
   role: z.enum(["Admin", "User", "Rider"]),
-  password: z.string(),
+  emaratesId: z.string().optional(),
+  drivingLicense: z.string().optional(),
 });
 
-// Schema for updating user (other roles) — role and cluster omitted, all optional
-export const UpdateUserSchemaForOtherRoles = UserSchema.omit({
+export const CreateUserSchema = BaseUserSchema.superRefine((data, ctx) => {
+  if (data.role === "Rider") {
+    if (!data.emaratesId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Emarates ID is required for Rider",
+        path: ["emaratesId"],
+      });
+    }
+    if (!data.drivingLicense) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Driving license is required for Rider",
+        path: ["drivingLicense"],
+      });
+    }
+  }
+});
+
+export const UpdateUserSchemaForOtherRoles = BaseUserSchema.omit({
   role: true,
 }).partial();
-
-// Schema for creating user — phoneNumber, address, profileImage omitted, cluster optional
-export const CreateUserSchema = UserSchema;
 
 export const SaveAddressSchema = z.object({
   label: z.string().trim().optional(),
