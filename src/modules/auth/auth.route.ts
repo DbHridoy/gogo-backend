@@ -1,11 +1,22 @@
 import { Router } from "express";
 import { validate } from "../../middlewares/validate.middleware";
-import { createUserSchema, loginUserSchema, verifyOtpSchema } from "./auth.schema";
+import {
+  checkUserByPhoneSchema,
+  createUserSchema,
+  loginUserSchema,
+  verifyOtpSchema,
+} from "./auth.schema";
 import { authController } from "../../container";
 
 const authRoute = Router();
 
 // Register route
+authRoute.post(
+  "/check-user",
+  validate(checkUserByPhoneSchema),
+  authController.checkUserByPhoneNumber
+);
+
 authRoute.post(
   "/register",
   validate(createUserSchema),

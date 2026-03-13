@@ -33,6 +33,9 @@ const envSchema = z.object({
   TAP_REDIRECT_URL: z
     .string()
     .default("http://localhost:5173/payment/callback"),
+  FIREBASE_PROJECT_ID: z.string().default(""),
+  FIREBASE_CLIENT_EMAIL: z.string().default(""),
+  FIREBASE_PRIVATE_KEY: z.string().default(""),
 });
 
 export const env = envSchema.parse(process.env);

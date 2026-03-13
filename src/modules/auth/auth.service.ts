@@ -1,4 +1,4 @@
-import { logger, logger as consoleLogger } from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
 import crypto from "crypto";
@@ -6,14 +6,13 @@ import { AuthRepository } from "./auth.repository";
 import { UserRepository } from "../user/user.repository";
 import { createUserType } from "./auth.type";
 import { JwtUtils } from "../../utils/jwt-utils";
-import { Mailer } from "../../utils/mailer-utils";
+import { getFirebaseAdmin } from "../../config/firebase";
 
 export class AuthService {
   constructor(
     private authRepo: AuthRepository,
     private userRepo: UserRepository,
-    private jwtUtils: JwtUtils,
-    private mailerUtils: Mailer
+    private jwtUtils: JwtUtils
   ) {}
 
   private generateReferralCodeValue() {
@@ -43,6 +42,18 @@ export class AuthService {
     role: user.role,
   });
 
+  checkUserByPhoneNumber = async (phoneNumber: string) => {
+    const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
+
+    return {
+      exists: Boolean(user),
+      requiresRegistration: !user,
+      message: user
+        ? "User exists. Proceed with OTP login."
+        : "User not found. Proceed with registration.",
+    };
+  };
+
   register = async (userBody: createUserType) => {
     logger.info({ userBody }, "UserBody");
 
@@ -52,6 +63,17 @@ export class AuthService {
       throw new apiError(
         Errors.AlreadyExists.code,
         "User already exists with this email"
+      );
+    }
+
+    const existingPhoneUser = await this.userRepo.findUserByPhoneNumber(
+      userBody.phoneNumber
+    );
+
+    if (existingPhoneUser) {
+      throw new apiError(
+        Errors.AlreadyExists.code,
+        "User already exists with this phone number"
       );
     }
 
@@ -75,11 +97,10 @@ export class AuthService {
 
     const newUser = await this.userRepo.createUser(user);
 
-    await this.sendOtp(userBody.phoneNumber);
-
     return {
       user: newUser,
-      otpSent: true,
+      otpSent: false,
+      requiresOtpLogin: true,
     };
   };
 
@@ -88,46 +109,32 @@ export class AuthService {
     if (!user) {
       throw new apiError(Errors.NotFound.code, "User not found");
     }
-    return await this.sendOtp(phoneNumber);
-  };
 
-  async sendOtp(phoneNumber: string) {
-    const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
-
-    if (!user) {
-      throw new apiError(Errors.NotFound.code, "User not found");
-    }
-    const otp = Math.floor(1000 + Math.random() * 9000); // 4-digit OTP
-
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
-
-    // Save or update OTP in DB
-
-    try {
-      await this.mailerUtils.sendOtp(user.email, otp);
-      const insertedOtp = await this.authRepo.createOtp(phoneNumber, otp, expiresAt);
-      return {
-        success: true,
-        data: insertedOtp,
-        message: "OTP sent successfully",
-      };
-    } catch (error) {
-      console.error("Email error:", error);
-      return { success: false, message: "Failed to send OTP" };
-    }
+    return {
+      success: true,
+      firebaseOtpRequired: true,
+      message: "User exists. Complete phone OTP with Firebase on the client app.",
+    };
   }
 
-  async verifyOtp(phoneNumber: string, otp: string) {
-    const record = await this.authRepo.verifyOtp(phoneNumber, Number(otp));
-    if (!record) {
-      throw new apiError(400, "Invalid OTP");
+  async verifyOtp(phoneNumber: string, idToken: string) {
+    let decodedToken: any;
+    try {
+      decodedToken = await getFirebaseAdmin().auth().verifyIdToken(idToken);
+    } catch {
+      throw new apiError(401, "Invalid Firebase ID token");
     }
 
-    if (record.expiresAt < new Date()) {
-      throw new apiError(400, "OTP expired");
+    const firebasePhoneNumber = decodedToken.phone_number;
+
+    if (!firebasePhoneNumber) {
+      throw new apiError(400, "Firebase token does not contain a phone number");
     }
 
-    await this.authRepo.deleteOtp(record._id);
+    if (firebasePhoneNumber !== phoneNumber) {
+      throw new apiError(400, "Phone number does not match verified Firebase token");
+    }
+
     const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
 
     if (!user) {
@@ -143,6 +150,7 @@ export class AuthService {
       user,
       accessToken,
       refreshToken,
+      firebaseUid: decodedToken.uid,
     };
   }
 }

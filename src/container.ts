@@ -1,6 +1,5 @@
 import { HashUtils } from "./utils/hash-utils";
 import { JwtUtils } from "./utils/jwt-utils";
-import { Mailer } from "./utils/mailer-utils";
 import { UserRepository } from "./modules/user/user.repository";
 import { UserService } from "./modules/user/user.service";
 import { UserController } from "./modules/user/user.controller";
@@ -21,7 +20,6 @@ import { CommonController } from "./modules/common/common.controller";
 
 export const hashUtils = new HashUtils();
 export const jwtUtils = new JwtUtils();
-export const mailer = new Mailer();
 
 export const userRepository = new UserRepository(buildDynamicSearch);
 export const userService = new UserService(userRepository);
@@ -31,8 +29,7 @@ export const authRepo = new AuthRepository();
 export const authService = new AuthService(
   authRepo,
   userRepository,
-  jwtUtils,
-  mailer
+  jwtUtils
 );
 export const authMiddleware = new AuthMiddleware(jwtUtils, userRepository);
 export const authController = new AuthController(authService);

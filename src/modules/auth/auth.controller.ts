@@ -9,6 +9,20 @@ import { apiError } from "../../errors/api-error";
 export class AuthController {
   constructor(private authService: AuthService) { }
 
+  checkUserByPhoneNumber = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const result = await this.authService.checkUserByPhoneNumber(
+        req.body.phoneNumber
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: result.message,
+        data: result,
+      });
+    }
+  );
+
   register = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const userBody = req.body;
@@ -16,7 +30,7 @@ export class AuthController {
       const newUser = await this.authService.register(userBody);
       res.status(HttpCodes.Created).json({
         success: true,
-        message: "User created successfully",
+        message: "User registered successfully",
         data: newUser,
       });
     }
@@ -43,8 +57,8 @@ export class AuthController {
 
   verifyOtp = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { phoneNumber, otp } = req.body;
-      const record = await this.authService.verifyOtp(phoneNumber, otp);
+      const { phoneNumber, idToken } = req.body;
+      const record = await this.authService.verifyOtp(phoneNumber, idToken);
       res.cookie("refreshToken", record.refreshToken, {
         httpOnly: true,
         secure: false,

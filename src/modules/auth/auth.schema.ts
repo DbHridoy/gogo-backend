@@ -37,6 +37,10 @@ export const loginUserSchema = z.object({
 });
 
 export const verifyOtpSchema = z.object({
+  idToken: z.string().min(1, "Firebase ID token is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
-  otp: z.string().regex(/^\d{4}$/, "OTP must be 4 digits"),
+});
+
+export const checkUserByPhoneSchema = z.object({
+  phoneNumber: z.string().min(1, "Phone number is required"),
 });
