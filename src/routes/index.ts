@@ -4,6 +4,7 @@ import authRoute from "../modules/auth/auth.route";
 import orderRoute from "../modules/order/order.route";
 import paymentRoute from "../modules/payment/payment.route";
 import commonRoute from "../modules/common/common.route";
+import dashboardRoute from "../modules/dashboard/dashboard.route";
 
 const appRouter = Router();
 
@@ -27,6 +28,10 @@ const moduleRoutes = [
   {
     path: "/common",
     router: commonRoute,
+  },
+  {
+    path: "/dashboard",
+    router: dashboardRoute,
   },
 ];
 
