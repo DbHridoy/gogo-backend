@@ -45,6 +45,65 @@ export class AuthController {
     }
   );
 
+  adminLogin = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const record = await this.authService.adminLogin(req.body.email, req.body.password);
+
+      res.cookie("refreshToken", record.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Admin login successful",
+        data: record,
+      });
+    }
+  );
+
+  forgotAdminPassword = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const result = await this.authService.forgotAdminPassword(req.body.email);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
+
+  verifyAdminResetOtp = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const result = await this.authService.verifyAdminResetOtp(
+        req.body.email,
+        req.body.otp
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
+
+  resetAdminPassword = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const result = await this.authService.resetAdminPassword(
+        req.body.email,
+        req.body.otp,
+        req.body.newPassword
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
+
   // reset password
   // sendOtp = asyncHandler(
   //   async (req: Request, res: Response, next: NextFunction) => {

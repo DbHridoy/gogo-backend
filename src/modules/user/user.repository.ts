@@ -13,6 +13,10 @@ export class UserRepository {
     return await User.findOne({ email }).lean();
   };
 
+  findUserByEmailWithPassword = async (email: string) => {
+    return await User.findOne({ email }).select("+password").lean();
+  };
+
   findUserByReferralCode = async (referralCode: string) => {
     return await User.findOne({ referralCode: referralCode.toUpperCase() }).lean();
   };

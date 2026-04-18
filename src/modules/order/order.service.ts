@@ -21,6 +21,9 @@ export class OrderService {
     private userRepo: UserRepository
   ) {}
 
+  private getActorId = (actor: any) =>
+    actor ? String(actor._id || actor) : null;
+
   private buildStatusHistoryEntry = (
     currentUser: any,
     status: string,
@@ -157,7 +160,7 @@ export class OrderService {
       if (currentUser.userId !== riderId) {
         throw new apiError(Errors.Forbidden.code, "Rider can only assign themselves");
       }
-      if (order.rider && String(order.rider) !== currentUser.userId) {
+      if (this.getActorId(order.rider) !== null && this.getActorId(order.rider) !== currentUser.userId) {
         throw new apiError(Errors.Forbidden.code, "Order already assigned to another rider");
       }
     }
@@ -197,7 +200,7 @@ export class OrderService {
       throw new apiError(Errors.NotFound.code, "Order not found");
     }
 
-    const assignedRiderId = order.rider ? String(order.rider) : null;
+    const assignedRiderId = this.getActorId(order.rider);
 
     if (currentUser.role === "Rider" && assignedRiderId !== currentUser.userId) {
       throw new apiError(Errors.Forbidden.code, "Only assigned rider can update order status");
@@ -350,7 +353,7 @@ export class OrderService {
       throw new apiError(Errors.NotFound.code, "Order not found");
     }
 
-    const assignedRiderId = order.rider ? String(order.rider) : null;
+    const assignedRiderId = this.getActorId(order.rider);
 
     if (currentUser.role === "Rider" && assignedRiderId !== currentUser.userId) {
       throw new apiError(Errors.Forbidden.code, "Only assigned rider can update checkpoints");

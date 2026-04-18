@@ -16,15 +16,15 @@ export const Errors = {
     message: "No token provided",
   },
   InvalidToken:{
-    code:500,
+    code:401,
     message:"Invalid token"
   },
   Forbidden: {
-    code: 405,
+    code: 403,
     message: "Insufficient permission",
   },
   EnumValue:{
-    code:405,
+    code:400,
     message:"Invalid enum value"
   }
 };

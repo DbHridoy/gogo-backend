@@ -19,6 +19,16 @@ export class PaymentService {
     private orderRepo: OrderRepository
   ) {}
 
+  private getTapBaseUrl = () => {
+    const baseUrl = (env.TAP_API_BASE_URL || "https://api.tap.company/v2").trim();
+
+    try {
+      return new URL(baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
+    } catch {
+      throw new apiError(500, "TAP_API_BASE_URL is invalid");
+    }
+  };
+
   private mapTapStatus = (tapStatus: string): PaymentStatus => {
     const normalized = (tapStatus || "").toUpperCase();
 
@@ -37,14 +47,18 @@ export class PaymentService {
     path: string,
     options: RequestInit
   ): Promise<Record<string, any>> => {
-    if (!env.TAP_SECRET_KEY) {
+    const secretKey = (env.TAP_SECRET_KEY || "").trim();
+
+    if (!secretKey) {
       throw new apiError(500, "TAP_SECRET_KEY is not configured");
     }
 
-    const response = await fetch(`${env.TAP_API_BASE_URL}${path}`, {
+    const url = new URL(path.replace(/^\//, ""), this.getTapBaseUrl());
+
+    const response = await fetch(url, {
       ...options,
       headers: {
-        Authorization: `Bearer ${env.TAP_SECRET_KEY}`,
+        Authorization: `Bearer ${secretKey}`,
         "Content-Type": "application/json",
         ...(options.headers || {}),
       },

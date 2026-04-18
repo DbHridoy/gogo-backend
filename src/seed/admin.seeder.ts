@@ -14,7 +14,9 @@ const seedAdmin = async () => {
 
   const hashedPassword = await hashUtils.hashPassword(env.ADMIN_PASSWORD);
   await userRepository.createUser({
-    fullName: "Admin",
+    firstName: "System",
+    lastName: "Admin",
+    phoneNumber: "0000000000",
     email: env.ADMIN_EMAIL,
     role: "Admin",
     password: hashedPassword,

@@ -21,6 +21,15 @@ export const errorHandler = (
     statusCode = 400;
     message = formatZodError(err);
     return res.status(statusCode).json({ success: false, message });
+  } else if (
+    err instanceof SyntaxError &&
+    "status" in err &&
+    (err as SyntaxError & { status?: number }).status === 400 &&
+    "body" in err
+  ) {
+    statusCode = 400;
+    message = "Invalid JSON in request body";
+    return res.status(statusCode).json({ success: false, message });
   } else if (err instanceof apiError) {
     statusCode = err.statusCode;
     message = err.message;

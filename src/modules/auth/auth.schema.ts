@@ -36,6 +36,11 @@ export const loginUserSchema = z.object({
   phoneNumber: z.string().min(1, "Phone number is required"),
 });
 
+export const adminLoginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 export const verifyOtpSchema = z.object({
   idToken: z.string().min(1, "Firebase ID token is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
@@ -44,3 +49,29 @@ export const verifyOtpSchema = z.object({
 export const checkUserByPhoneSchema = z.object({
   phoneNumber: z.string().min(1, "Phone number is required"),
 });
+
+export const forgotAdminPasswordSchema = z.object({
+  email: z.email(),
+});
+
+export const verifyAdminResetOtpSchema = z.object({
+  email: z.email(),
+  otp: z.coerce.number().int().min(100000).max(999999),
+});
+
+export const resetAdminPasswordSchema = z
+  .object({
+    email: z.email(),
+    otp: z.coerce.number().int().min(100000).max(999999),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
+  });

@@ -1,9 +1,13 @@
 import { Router } from "express";
 import { validate } from "../../middlewares/validate.middleware";
 import {
+  adminLoginSchema,
   checkUserByPhoneSchema,
   createUserSchema,
+  forgotAdminPasswordSchema,
   loginUserSchema,
+  resetAdminPasswordSchema,
+  verifyAdminResetOtpSchema,
   verifyOtpSchema,
 } from "./auth.schema";
 import { authController } from "../../container";
@@ -24,6 +28,22 @@ authRoute.post(
 );
 
 authRoute.post("/login", validate(loginUserSchema), authController.loginUser);
+authRoute.post("/admin/login", validate(adminLoginSchema), authController.adminLogin);
+authRoute.post(
+  "/admin/forgot-password",
+  validate(forgotAdminPasswordSchema),
+  authController.forgotAdminPassword
+);
+authRoute.post(
+  "/admin/verify-reset-otp",
+  validate(verifyAdminResetOtpSchema),
+  authController.verifyAdminResetOtp
+);
+authRoute.post(
+  "/admin/reset-password",
+  validate(resetAdminPasswordSchema),
+  authController.resetAdminPassword
+);
 
 authRoute.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
 // authRoute.post("/send-otp", authController.sendOtp);

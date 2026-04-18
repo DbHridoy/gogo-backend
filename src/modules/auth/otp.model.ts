@@ -1,13 +1,20 @@
 import { model, Schema } from "mongoose";
 
 const otpSchema = new Schema({
-  phoneNumber: {
+  email: {
     type: String,
     required: true,
+    lowercase: true,
+    trim: true,
   },
   otp: {
     type: Number,
     required: true,
+  },
+  purpose: {
+    type: String,
+    required: true,
+    trim: true,
   },
   expiresAt: {
     type: Date,
@@ -25,6 +32,7 @@ const otpSchema = new Schema({
 });
 
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+otpSchema.index({ email: 1, purpose: 1 }, { unique: true });
 
 const OTPModel = model("OTP", otpSchema);
 

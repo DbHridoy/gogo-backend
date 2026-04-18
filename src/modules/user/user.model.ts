@@ -49,6 +49,10 @@ const userSchema = new Schema(
       index: true,
       unique: true,
     },
+    password: {
+      type: String,
+      select: false,
+    },
     profileImage: {
       type: String,
       trim: true,
@@ -105,8 +109,20 @@ const userSchema = new Schema(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(_doc, ret) {
+        delete ret.password;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform(_doc, ret) {
+        delete ret.password;
+        return ret;
+      },
+    },
   }
 );
 

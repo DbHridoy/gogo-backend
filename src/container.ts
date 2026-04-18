@@ -20,9 +20,11 @@ import { CommonController } from "./modules/common/common.controller";
 import { DashboardRepository } from "./modules/dashboard/dashboard.repository";
 import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { DashboardController } from "./modules/dashboard/dashboard.controller";
+import { Mailer } from "./utils/mailer-utils";
 
 export const hashUtils = new HashUtils();
 export const jwtUtils = new JwtUtils();
+export const mailer = new Mailer();
 
 export const userRepository = new UserRepository(buildDynamicSearch);
 export const userService = new UserService(userRepository);
@@ -32,7 +34,9 @@ export const authRepo = new AuthRepository();
 export const authService = new AuthService(
   authRepo,
   userRepository,
-  jwtUtils
+  jwtUtils,
+  hashUtils,
+  mailer
 );
 export const authMiddleware = new AuthMiddleware(jwtUtils, userRepository);
 export const authController = new AuthController(authService);
