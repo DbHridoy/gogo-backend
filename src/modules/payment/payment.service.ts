@@ -3,6 +3,8 @@ import { Errors } from "../../constants/error-codes";
 import { env } from "../../config/env";
 import { OrderRepository } from "../order/order.repository";
 import { PaymentRepository } from "./payment.repository";
+import { logger } from "../../utils/logger";
+import crypto from "crypto";
 
 type PaymentStatus =
   | "Pending"
@@ -35,12 +37,96 @@ export class PaymentService {
     if (normalized === "CAPTURED") return "Captured";
     if (normalized === "AUTHORIZED") return "Authorized";
     if (normalized === "INITIATED") return "Initiated";
+    if (normalized === "IN_PROGRESS") return "Pending";
     if (normalized === "REFUNDED") return "Refunded";
     if (["CANCELLED", "VOID", "ABANDONED"].includes(normalized)) {
       return "Cancelled";
     }
 
     return "Failed";
+  };
+
+  private getTapPostUrl = (overrideUrl?: string) => {
+    const postUrl = (overrideUrl || env.TAP_POST_URL || "").trim();
+
+    if (!postUrl) {
+      throw new apiError(500, "TAP_POST_URL is not configured");
+    }
+
+    try {
+      const parsed = new URL(postUrl);
+      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        throw new Error("Tap webhooks cannot target localhost");
+      }
+      return parsed.toString();
+    } catch {
+      throw new apiError(500, "TAP_POST_URL is invalid");
+    }
+  };
+
+  private formatTapAmount = (amount: number, currency: string) => {
+    const normalizedCurrency = (currency || "").toUpperCase();
+    const threeDecimalCurrencies = new Set(["BHD", "KWD", "OMR", "JOD"]);
+    const fractionDigits = threeDecimalCurrencies.has(normalizedCurrency) ? 3 : 2;
+
+    return Number(amount).toFixed(fractionDigits);
+  };
+
+  private buildTapHashString = (payload: Record<string, any>) => {
+    const status = payload?.status || "";
+    const objectType = (payload?.object || "").toLowerCase();
+
+    if (objectType === "invoice") {
+      return (
+        `x_id${payload?.id || ""}` +
+        `x_amount${this.formatTapAmount(Number(payload?.amount || 0), payload?.currency || "")}` +
+        `x_currency${payload?.currency || ""}` +
+        `x_updated${payload?.updated || ""}` +
+        `x_status${status}` +
+        `x_created${payload?.created || ""}`
+      );
+    }
+
+    return (
+      `x_id${payload?.id || ""}` +
+      `x_amount${this.formatTapAmount(Number(payload?.amount || 0), payload?.currency || "")}` +
+      `x_currency${payload?.currency || ""}` +
+      `x_gateway_reference${payload?.reference?.gateway || ""}` +
+      `x_payment_reference${payload?.reference?.payment || ""}` +
+      `x_status${status}` +
+      `x_created${payload?.transaction?.created || payload?.created || ""}`
+    );
+  };
+
+  private validateTapWebhook = (
+    payload: Record<string, any>,
+    headers: Record<string, any> = {}
+  ) => {
+    const secretKey = (env.TAP_SECRET_KEY || "").trim();
+    const receivedHash = String(headers["hashstring"] || headers["Hashstring"] || "").trim();
+
+    if (!secretKey) {
+      throw new apiError(500, "TAP_SECRET_KEY is not configured");
+    }
+
+    if (!receivedHash) {
+      throw new apiError(401, "Tap webhook hashstring header missing");
+    }
+
+    const expectedHash = crypto
+      .createHmac("sha256", secretKey)
+      .update(this.buildTapHashString(payload))
+      .digest("hex");
+
+    const expectedBuffer = Buffer.from(expectedHash, "utf8");
+    const receivedBuffer = Buffer.from(receivedHash, "utf8");
+
+    if (
+      expectedBuffer.length !== receivedBuffer.length ||
+      !crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+    ) {
+      throw new apiError(401, "Tap webhook hash validation failed");
+    }
   };
 
   private callTap = async (
@@ -76,9 +162,23 @@ export class PaymentService {
     }
 
     if (!response.ok) {
+      logger.info(
+        {
+          status: response.status,
+          statusText: response.statusText,
+          url: url.toString(),
+          response: parsedBody,
+        },
+        "Tap gateway error"
+      );
+
       throw new apiError(
         502,
-        parsedBody?.message || "Tap gateway request failed"
+        parsedBody?.message ||
+          parsedBody?.errors?.[0]?.description ||
+          parsedBody?.errors?.[0]?.message ||
+          parsedBody?.error ||
+          `Tap gateway request failed with status ${response.status}`
       );
     }
 
@@ -89,7 +189,12 @@ export class PaymentService {
     orderId: string,
     paymentStatus: PaymentStatus
   ) => {
-    const orderPaymentStatus = paymentStatus === "Captured" ? "Paid" : "Unpaid";
+    const orderPaymentStatus =
+      paymentStatus === "Captured"
+        ? "Paid"
+        : paymentStatus === "Refunded"
+          ? "Refunded"
+          : "Unpaid";
     await this.orderRepo.updateOrder(orderId, { paymentStatus: orderPaymentStatus });
   };
 
@@ -141,6 +246,9 @@ export class PaymentService {
       },
       redirect: {
         url: payload.redirectUrl || env.TAP_REDIRECT_URL,
+      },
+      post: {
+        url: this.getTapPostUrl(payload.postUrl),
       },
       metadata: {
         orderId: String(order._id),
@@ -213,7 +321,12 @@ export class PaymentService {
     };
   };
 
-  handleTapWebhook = async (payload: any) => {
+  handleTapWebhook = async (
+    payload: any,
+    headers: Record<string, any> = {}
+  ) => {
+    this.validateTapWebhook(payload, headers);
+
     const chargeId = payload?.id || payload?.data?.id || payload?.charge?.id;
 
     if (!chargeId) {

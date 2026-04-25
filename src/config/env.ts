@@ -13,6 +13,11 @@ const normalizeMailSecret = (value: unknown) => {
   return value.replace(/\s+/g, "");
 };
 
+const normalizeTapSecret = (value: unknown) => {
+  if (typeof value !== "string") return value;
+  return value.replace(/\s+/g, "");
+};
+
 const envSchema = z.object({
   PORT: z.string().default("5000"),
   DB_URL: z
@@ -42,11 +47,15 @@ const envSchema = z.object({
   S3_BUCKET_NAME: z.string().min(1, "AWS bucket name required"),
   ADMIN_EMAIL: z.string().email("Admin email must be valid"),
   ADMIN_PASSWORD: z.string().min(1, "Admin password required"),
-  TAP_SECRET_KEY: z.preprocess(emptyToUndefined, z.string().default("")),
+  TAP_SECRET_KEY: z.preprocess(
+    (value) => normalizeTapSecret(emptyToUndefined(value)),
+    z.string().default("")
+  ),
   TAP_API_BASE_URL: z.preprocess(
     emptyToUndefined,
     z.string().default("https://api.tap.company/v2")
   ),
+  TAP_POST_URL: z.preprocess(emptyToUndefined, z.string().default("")),
   TAP_REDIRECT_URL: z.preprocess(
     emptyToUndefined,
     z.string().default("http://localhost:5173/payment/callback")

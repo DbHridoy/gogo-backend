@@ -6,6 +6,12 @@ export const requestLogger = (
   res: Response,
   next: NextFunction
 ) => {
-  logger.info(`${req.method} ${req.originalUrl.slice(7)}`);
+  if (req.method === "POST") {
+    logger.info(
+      `method=${req.method} route=${req.originalUrl} body=${JSON.stringify(req.body ?? {})}`
+    );
+  } else {
+    logger.info(`method=${req.method} route=${req.originalUrl}`);
+  }
   next();
 };

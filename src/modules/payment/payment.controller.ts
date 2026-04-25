@@ -45,7 +45,10 @@ export class PaymentController {
 
   handleTapWebhook = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
-      const result = await this.paymentService.handleTapWebhook(req.body);
+      const result = await this.paymentService.handleTapWebhook(
+        req.body,
+        req.headers as Record<string, any>
+      );
 
       res.status(HttpCodes.Ok).json({
         success: true,
