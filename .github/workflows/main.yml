@@ -38,13 +38,13 @@ jobs:
           username: ${{secrets.EC2_USERNAME}}
           key: ${{secrets.PRIVATE_KEY}}
           script: |
-            if [ ! -d "YOUR_REPO" ]; then
-              git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+            if [ ! -d "gogo-backend" ]; then
+              git clone https://github.com/DbHridoy/gogo-backend.git
             fi
 
-            cd YOUR_REPO
-
-            git pull origin main
+            cd gogo-backend
+            git checkout dev
+            git pull
 
             npm i -g pnpm
             pnpm install
