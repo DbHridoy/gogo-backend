@@ -38,6 +38,7 @@ jobs:
           username: ${{secrets.EC2_USERNAME}}
           key: ${{secrets.PRIVATE_KEY}}
           script: |
+            bash -l -c '
             if [ ! -d "gogo-backend" ]; then
               git clone https://github.com/DbHridoy/gogo-backend.git
             fi
