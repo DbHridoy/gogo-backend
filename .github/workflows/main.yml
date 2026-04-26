@@ -38,18 +38,23 @@ jobs:
           username: ${{secrets.EC2_USERNAME}}
           key: ${{secrets.PRIVATE_KEY}}
           script: |
-            bash -l -c '
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            nvm use 24
+
             if [ ! -d "gogo-backend" ]; then
               git clone https://github.com/DbHridoy/gogo-backend.git
             fi
 
             cd gogo-backend
+
             git checkout dev
             git pull
 
             npm i -g pnpm
+
             pnpm install
             pnpm build
 
             pm2 restart app || pm2 start pnpm --name "app" -- start
-            '
