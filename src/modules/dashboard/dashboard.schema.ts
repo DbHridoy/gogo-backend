@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const dashboardQuerySchema = z
   .object({
-    groupBy: z.enum(["daily", "weekly", "monthly"]).optional().default("daily"),
+    groupBy: z
+      .enum(["daily", "weekly", "monthly", "yearly"])
+      .optional()
+      .default("daily"),
     dateFrom: z.iso.datetime().optional(),
     dateTo: z.iso.datetime().optional(),
     status: z

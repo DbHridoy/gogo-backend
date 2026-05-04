@@ -10,7 +10,11 @@ import {
   TypedRequestBody,
   TypedRequestBodyWithFile,
 } from "../../types/request.type";
-import { createUserType, saveAddressType } from "./user.type";
+import {
+  createUserType,
+  saveAddressType,
+  updateRiderLocationType,
+} from "./user.type";
 
 export class UserController {
   constructor(private userService: UserService) { }
@@ -136,6 +140,25 @@ export class UserController {
         success: true,
         message: "Profile updated successfully",
         data: updatedUser,
+      });
+    }
+  );
+
+  updateRiderLocation = asyncHandler(
+    async (
+      req: TypedRequestBody<updateRiderLocationType>,
+      res: Response,
+      _next: NextFunction
+    ) => {
+      const user = await this.userService.updateRiderLocation(req.user, req.body);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Rider location updated successfully",
+        data: {
+          userId: user?._id,
+          location: user?.location || null,
+        },
       });
     }
   );

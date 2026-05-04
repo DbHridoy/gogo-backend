@@ -1,7 +1,12 @@
 import { UserRepository } from "./user.repository";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
-import { createUserType, saveAddressType, updateSavedAddressType } from "./user.type";
+import {
+  createUserType,
+  saveAddressType,
+  updateRiderLocationType,
+  updateSavedAddressType,
+} from "./user.type";
 
 export class UserService {
   constructor(private userRepo: UserRepository) {}
@@ -31,6 +36,35 @@ export class UserService {
 
   updateMyProfile = async (id: string, body: any) => {
     return await this.userRepo.updateMyProfile(id, body);
+  };
+
+  updateRiderLocation = async (currentUser: any, body: updateRiderLocationType) => {
+    if (!currentUser?.userId) {
+      throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+    }
+
+    const user = await this.userRepo.findUserById(currentUser.userId);
+
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+    }
+
+    if (user.role !== "Rider") {
+      throw new apiError(Errors.Forbidden.code, "Only riders can update location");
+    }
+
+    if (user.status === "Pending") {
+      throw new apiError(
+        Errors.Forbidden.code,
+        "Rider account is pending admin approval"
+      );
+    }
+
+    return await this.userRepo.updateUserLocation(currentUser.userId, {
+      latitude: body.latitude,
+      longitude: body.longitude,
+      updatedAt: new Date(),
+    });
   };
 
   updateUser = async (id: string, body: any) => {

@@ -10,7 +10,7 @@ type DashboardFilters = {
   search?: string;
   recentLimit: number;
   hotAreaLimit: number;
-  groupBy: "daily" | "weekly" | "monthly";
+  groupBy: "daily" | "weekly" | "monthly" | "yearly";
 };
 
 export class DashboardRepository {
@@ -56,6 +56,15 @@ export class DashboardRepository {
   }
 
   private buildPeriodExpression(groupBy: DashboardFilters["groupBy"]) {
+    if (groupBy === "yearly") {
+      return {
+        $dateToString: {
+          format: "%Y",
+          date: "$createdAt",
+        },
+      };
+    }
+
     if (groupBy === "weekly") {
       return {
         $dateToString: {
@@ -78,6 +87,15 @@ export class DashboardRepository {
       $dateToString: {
         format: "%Y-%m-%d",
         date: "$createdAt",
+      },
+    };
+  }
+
+  private buildCreatedAtMatch(filters: DashboardFilters) {
+    return {
+      createdAt: {
+        $gte: filters.dateFrom,
+        $lte: filters.dateTo,
       },
     };
   }
@@ -213,11 +231,101 @@ export class DashboardRepository {
     ]);
   };
 
+  getUserGrowth = async (filters: DashboardFilters) => {
+    return User.aggregate([
+      {
+        $match: {
+          ...this.buildCreatedAtMatch(filters),
+          role: "User",
+        },
+      },
+      {
+        $group: {
+          _id: this.buildPeriodExpression(filters.groupBy),
+          totalUsers: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          period: "$_id",
+          totalUsers: 1,
+        },
+      },
+    ]);
+  };
+
+  getRiderGrowth = async (filters: DashboardFilters) => {
+    return User.aggregate([
+      {
+        $match: {
+          ...this.buildCreatedAtMatch(filters),
+          role: "Rider",
+        },
+      },
+      {
+        $group: {
+          _id: this.buildPeriodExpression(filters.groupBy),
+          totalRiders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          period: "$_id",
+          totalRiders: 1,
+        },
+      },
+    ]);
+  };
+
+  getIncomeGrowth = async (filters: DashboardFilters) => {
+    return Payment.aggregate([
+      {
+        $match: {
+          ...this.buildCreatedAtMatch(filters),
+          status: "Captured",
+        },
+      },
+      {
+        $group: {
+          _id: this.buildPeriodExpression(filters.groupBy),
+          totalIncome: { $sum: "$amount" },
+          totalTransactions: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          period: "$_id",
+          totalIncome: 1,
+          totalTransactions: 1,
+        },
+      },
+    ]);
+  };
+
   getRecentOrders = async (filters: DashboardFilters) => {
     const orderMatch = this.buildOrderMatch(filters);
 
     return Order.find(orderMatch)
       .populate("user", "firstName lastName phoneNumber")
+      .sort({ createdAt: -1 })
+      .limit(filters.recentLimit)
+      .lean();
+  };
+
+  getEarnings = async (filters: DashboardFilters) => {
+    const orderMatch = this.buildOrderMatch(filters);
+
+    return Order.find({
+      ...orderMatch,
+      paymentStatus: "Paid",
+    })
+      .populate("user", "firstName lastName")
       .sort({ createdAt: -1 })
       .limit(filters.recentLimit)
       .lean();

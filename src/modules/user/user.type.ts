@@ -1,6 +1,7 @@
 import z from "zod";
 import {
   CreateUserSchema,
+  UpdateRiderLocationSchema,
   SaveAddressSchema,
   UpdateSavedAddressSchema,
   UpdateUserSchemaForOtherRoles,
@@ -10,3 +11,4 @@ export type updateOtherRoleUserType = z.infer<typeof UpdateUserSchemaForOtherRol
 export type createUserType=z.infer<typeof CreateUserSchema>
 export type saveAddressType = z.infer<typeof SaveAddressSchema>;
 export type updateSavedAddressType = z.infer<typeof UpdateSavedAddressSchema>;
+export type updateRiderLocationType = z.infer<typeof UpdateRiderLocationSchema>;

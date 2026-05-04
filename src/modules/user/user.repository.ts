@@ -63,6 +63,13 @@ export class UserRepository {
     return await User.findByIdAndUpdate(id, body, { new: true });
   };
 
+  updateUserLocation = async (
+    id: string,
+    location: { latitude: number; longitude: number; updatedAt: Date }
+  ) => {
+    return await User.findByIdAndUpdate(id, { location }, { new: true });
+  };
+
   addSavedAddress = async (id: string, address: any) => {
     return await User.findByIdAndUpdate(
       id,

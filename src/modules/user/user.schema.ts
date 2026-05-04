@@ -50,3 +50,8 @@ export const UpdateSavedAddressSchema = SaveAddressSchema.partial().refine(
     message: "At least one field is required",
   }
 );
+
+export const UpdateRiderLocationSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});

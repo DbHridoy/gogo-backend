@@ -21,6 +21,9 @@ export class DashboardService {
       dateFrom.setMonth(now.getMonth() - 11);
       dateFrom.setDate(1);
       dateFrom.setHours(0, 0, 0, 0);
+    } else if (query.groupBy === "yearly") {
+      dateFrom.setFullYear(now.getFullYear() - 4, 0, 1);
+      dateFrom.setHours(0, 0, 0, 0);
     } else if (query.groupBy === "weekly") {
       dateFrom.setDate(now.getDate() - 83);
       dateFrom.setHours(0, 0, 0, 0);
@@ -51,11 +54,25 @@ export class DashboardService {
       groupBy: query.groupBy ?? "daily",
     };
 
-    const [overview, revenueTrend, recentOrders, hotAreas, paymentStatusBreakdown] =
+    const [
+      overview,
+      revenueTrend,
+      userGrowth,
+      riderGrowth,
+      incomeGrowth,
+      recentOrders,
+      earnings,
+      hotAreas,
+      paymentStatusBreakdown,
+    ] =
       await Promise.all([
         this.dashboardRepository.getOverview(filters),
         this.dashboardRepository.getRevenueTrend(filters),
+        this.dashboardRepository.getUserGrowth(filters),
+        this.dashboardRepository.getRiderGrowth(filters),
+        this.dashboardRepository.getIncomeGrowth(filters),
         this.dashboardRepository.getRecentOrders(filters),
+        this.dashboardRepository.getEarnings(filters),
         this.dashboardRepository.getHotAreas(filters),
         this.dashboardRepository.getPaymentStatusBreakdown(filters),
       ]);
@@ -68,6 +85,9 @@ export class DashboardService {
       },
       overview,
       revenueTrend,
+      userGrowth,
+      riderGrowth,
+      incomeGrowth,
       recentOrders: recentOrders.map((order: any) => ({
         orderId: String(order._id),
         customer: order.user
@@ -87,6 +107,14 @@ export class DashboardService {
           order.dropoff?.addressLine ||
           "Unknown Area",
         createdAt: order.createdAt,
+      })),
+      earnings: earnings.map((order: any) => ({
+        fullName: order.user
+          ? `${order.user.firstName || ""} ${order.user.lastName || ""}`.trim()
+          : "Unknown User",
+        date: order.createdAt,
+        commission: Number((order.price * 0.1).toFixed(2)),
+        parcel: String(order._id),
       })),
       hotAreas: hotAreas.map((area: any) => ({
         areaName: area.area,

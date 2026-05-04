@@ -3,6 +3,7 @@ import { validate } from "../../middlewares/validate.middleware";
 import {
   CreateUserSchema,
   SaveAddressSchema,
+  UpdateRiderLocationSchema,
   UpdateSavedAddressSchema,
   UpdateUserSchemaForOtherRoles,
 } from "./user.schema";
@@ -32,6 +33,12 @@ userRoute.patch(
     uploadType: "single",
   }),
   userController.updateMyProfile
+);
+userRoute.patch(
+  "/me/location",
+  authMiddleware.authorize(["Rider"]),
+  validate(UpdateRiderLocationSchema),
+  userController.updateRiderLocation
 );
 userRoute.get("/me/addresses", userController.getSavedAddresses);
 userRoute.post(
