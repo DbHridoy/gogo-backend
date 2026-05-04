@@ -55,4 +55,16 @@ export class CommonController {
       });
     }
   );
+
+  updateDeliverySettings = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const content = await this.commonService.updateDeliverySettings(req.body);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Delivery settings updated successfully",
+        data: content,
+      });
+    }
+  );
 }

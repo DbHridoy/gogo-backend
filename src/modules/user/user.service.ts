@@ -34,6 +34,22 @@ export class UserService {
   };
 
   updateUser = async (id: string, body: any) => {
+    const existingUser = await this.userRepo.findUserById(id);
+
+    if (!existingUser) {
+      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+    }
+
+    if (body.status) {
+      if (existingUser.role !== "Rider") {
+        throw new apiError(400, "Status can only be updated for rider accounts");
+      }
+
+      if (!["Pending", "Approved"].includes(body.status)) {
+        throw new apiError(400, "Invalid rider status");
+      }
+    }
+
     return await this.userRepo.updateUser(id, body)
   }
 

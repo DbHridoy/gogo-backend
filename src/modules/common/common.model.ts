@@ -23,6 +23,23 @@ const commonSchema = new Schema(
       default: "",
       trim: true,
     },
+    deliverySettings: {
+      baseDeliveryCharge: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      chargePerMile: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      minimumDistanceMiles: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+    },
   },
   {
     timestamps: true,

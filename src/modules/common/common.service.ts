@@ -18,4 +18,12 @@ export class CommonService {
   updateTermsAndConditions = async (content: string) => {
     return await this.commonRepo.updateContent("termsAndConditions", content);
   };
+
+  updateDeliverySettings = async (settings: {
+    baseDeliveryCharge?: number;
+    chargePerMile?: number;
+    minimumDistanceMiles?: number;
+  }) => {
+    return await this.commonRepo.updateDeliverySettings(settings);
+  };
 }

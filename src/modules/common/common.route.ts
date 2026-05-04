@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { authMiddleware, commonController } from "../../container";
 import { validate } from "../../middlewares/validate.middleware";
-import { UpdateCommonContentSchema } from "./common.schema";
+import {
+  UpdateCommonContentSchema,
+  UpdateDeliverySettingsSchema,
+} from "./common.schema";
 
 const commonRoute = Router();
 
@@ -29,6 +32,14 @@ commonRoute.patch(
   authMiddleware.authorize(["Admin"]),
   validate(UpdateCommonContentSchema),
   commonController.updateTermsAndConditions
+);
+
+commonRoute.patch(
+  "/delivery-settings",
+  authMiddleware.authenticate,
+  authMiddleware.authorize(["Admin"]),
+  validate(UpdateDeliverySettingsSchema),
+  commonController.updateDeliverySettings
 );
 
 export default commonRoute;

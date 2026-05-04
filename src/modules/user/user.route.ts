@@ -26,6 +26,7 @@ userRoute.get("/:id", userController.getUserById);
 userRoute.patch(
   "/me",
   authMiddleware.authenticate,
+  validate(UpdateUserSchemaForOtherRoles),
   uploadFile({
     fieldName: "profileImage",
     uploadType: "single",

@@ -88,7 +88,11 @@ export class DashboardService {
           "Unknown Area",
         createdAt: order.createdAt,
       })),
-      hotAreas,
+      hotAreas: hotAreas.map((area: any) => ({
+        areaName: area.area,
+        numberOfRiders: area.totalRiders,
+        numberOfOrders: area.totalOrders,
+      })),
       paymentStatusBreakdown,
     };
   };

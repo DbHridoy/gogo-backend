@@ -85,6 +85,14 @@ const userSchema = new Schema(
       required: true,
       enum: ["Admin", "User", "Rider"],
     },
+    status: {
+      type: String,
+      enum: ["Pending", "Approved"],
+      default: function () {
+        return this.role === "Rider" ? "Pending" : "Approved";
+      },
+      index: true,
+    },
     emaratesId: {
       type: String,
       required: function () {

@@ -90,9 +90,36 @@ export class DashboardRepository {
       Order.aggregate([
         { $match: orderMatch },
         {
+          $addFields: {
+            areaName: {
+              $ifNull: [
+                "$pickup.label",
+                {
+                  $ifNull: ["$pickup.addressLine", "Unknown Area"],
+                },
+              ],
+            },
+          },
+        },
+        {
           $group: {
             _id: null,
             totalOrders: { $sum: 1 },
+            activeRiders: {
+              $addToSet: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$rider", null] },
+                      { $ne: [{ $type: "$rider" }, "missing"] },
+                    ],
+                  },
+                  "$rider",
+                  "$$REMOVE",
+                ],
+              },
+            },
+            areas: { $addToSet: "$areaName" },
             totalRevenue: {
               $sum: {
                 $cond: [{ $eq: ["$paymentStatus", "Paid"] }, "$price", 0],
@@ -118,13 +145,16 @@ export class DashboardRepository {
         },
       ]),
       Promise.all([
-        User.countDocuments({ role: { $ne: "Admin" } }),
+        User.countDocuments({ role: "User" }),
+        User.countDocuments({ role: "Rider" }),
         Order.distinct("user", orderMatch),
       ]),
     ]);
 
     const orderMetrics = orderStats[0] || {
       totalOrders: 0,
+      activeRiders: [],
+      areas: [],
       totalRevenue: 0,
       activeOrdersCurrentPeriod: 0,
       completedOrdersCurrentPeriod: 0,
@@ -133,10 +163,17 @@ export class DashboardRepository {
     };
 
     return {
-      totalRevenue: orderMetrics.totalRevenue,
-      totalOrders: orderMetrics.totalOrders,
       totalUsers: userStats[0],
-      activeUsersCurrentPeriod: userStats[1].length,
+      totalRiders: userStats[1],
+      totalOrders: orderMetrics.totalOrders,
+      totalEarning: orderMetrics.totalRevenue,
+      totalRevenue: orderMetrics.totalRevenue,
+      activeDrivers: orderMetrics.activeRiders.length,
+      avgOrdersPerArea:
+        orderMetrics.areas.length > 0
+          ? Number((orderMetrics.totalOrders / orderMetrics.areas.length).toFixed(2))
+          : 0,
+      activeUsersCurrentPeriod: userStats[2].length,
       activeOrdersCurrentPeriod: orderMetrics.activeOrdersCurrentPeriod,
       completedOrdersCurrentPeriod: orderMetrics.completedOrdersCurrentPeriod,
       paidOrdersCurrentPeriod: orderMetrics.paidOrdersCurrentPeriod,
@@ -207,6 +244,20 @@ export class DashboardRepository {
         $group: {
           _id: "$areaName",
           totalOrders: { $sum: 1 },
+          riders: {
+            $addToSet: {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ["$rider", null] },
+                    { $ne: [{ $type: "$rider" }, "missing"] },
+                  ],
+                },
+                "$rider",
+                "$$REMOVE",
+              ],
+            },
+          },
           totalRevenue: {
             $sum: {
               $cond: [{ $eq: ["$paymentStatus", "Paid"] }, "$price", 0],
@@ -223,6 +274,7 @@ export class DashboardRepository {
           _id: 0,
           area: "$_id",
           totalOrders: 1,
+          totalRiders: { $size: "$riders" },
           totalRevenue: 1,
           center: {
             latitude: "$averageLatitude",

@@ -116,6 +116,10 @@ export class AuthService {
       throw new apiError(Errors.NotFound.code, "User not found");
     }
 
+    if (user.role === "Rider" && user.status === "Pending") {
+      throw new apiError(Errors.Forbidden.code, "Rider account is pending admin approval");
+    }
+
     return {
       success: true,
       firebaseOtpRequired: true,
@@ -251,6 +255,10 @@ export class AuthService {
 
     if (!user) {
       throw new apiError(Errors.NotFound.code, "User not found");
+    }
+
+    if (user.role === "Rider" && user.status === "Pending") {
+      throw new apiError(Errors.Forbidden.code, "Rider account is pending admin approval");
     }
 
     const payload = this.buildTokenPayload(user);
