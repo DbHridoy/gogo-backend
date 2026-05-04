@@ -21,6 +21,12 @@ import { DashboardRepository } from "./modules/dashboard/dashboard.repository";
 import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { DashboardController } from "./modules/dashboard/dashboard.controller";
 import { Mailer } from "./utils/mailer-utils";
+import { ReportRepository } from "./modules/report/report.repository";
+import { ReportService } from "./modules/report/report.service";
+import { ReportController } from "./modules/report/report.controller";
+import { NotificationRepository } from "./modules/notification/notification.repository";
+import { NotificationService } from "./modules/notification/notification.service";
+import { NotificationController } from "./modules/notification/notification.controller";
 
 export const hashUtils = new HashUtils();
 export const jwtUtils = new JwtUtils();
@@ -56,3 +62,11 @@ export const commonController = new CommonController(commonService);
 export const dashboardRepository = new DashboardRepository();
 export const dashboardService = new DashboardService(dashboardRepository);
 export const dashboardController = new DashboardController(dashboardService);
+
+export const reportRepository = new ReportRepository();
+export const reportService = new ReportService(reportRepository);
+export const reportController = new ReportController(reportService);
+
+export const notificationRepository = new NotificationRepository();
+export const notificationService = new NotificationService(notificationRepository);
+export const notificationController = new NotificationController(notificationService);
