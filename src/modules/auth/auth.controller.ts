@@ -75,6 +75,21 @@ export class AuthController {
     }
   );
 
+  changeAdminPassword = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const result = await this.authService.changeAdminPassword(
+        req.user,
+        req.body.currentPassword,
+        req.body.newPassword
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
+
   verifyAdminResetOtp = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
       const result = await this.authService.verifyAdminResetOtp(

@@ -13,9 +13,9 @@ const app: Application = express();
 
 // Middleware
 app.use(cors(corsOptions));
+app.use(requestLogger);
 app.use(express.json());
 app.use(cookieParser());
-app.use(requestLogger);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // Versioned router

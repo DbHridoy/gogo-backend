@@ -3,6 +3,7 @@ import { validate } from "../../middlewares/validate.middleware";
 import {
   adminLoginSchema,
   checkUserByPhoneSchema,
+  changeAdminPasswordSchema,
   createUserSchema,
   forgotAdminPasswordSchema,
   loginUserSchema,
@@ -10,7 +11,7 @@ import {
   verifyAdminResetOtpSchema,
   verifyOtpSchema,
 } from "./auth.schema";
-import { authController } from "../../container";
+import { authController, authMiddleware } from "../../container";
 
 const authRoute = Router();
 
@@ -29,6 +30,13 @@ authRoute.post(
 
 authRoute.post("/login", validate(loginUserSchema), authController.loginUser);
 authRoute.post("/admin/login", validate(adminLoginSchema), authController.adminLogin);
+authRoute.post(
+  "/admin/change-password",
+  authMiddleware.authenticate,
+  authMiddleware.authorize("Admin"),
+  validate(changeAdminPasswordSchema),
+  authController.changeAdminPassword
+);
 authRoute.post(
   "/admin/forgot-password",
   validate(forgotAdminPasswordSchema),

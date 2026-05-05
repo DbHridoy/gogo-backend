@@ -185,6 +185,47 @@ export class AuthService {
     };
   };
 
+  changeAdminPassword = async (
+    currentUser: Express.Request["user"],
+    currentPassword: string,
+    newPassword: string
+  ) => {
+    if (!currentUser?.email || currentUser.role !== "Admin") {
+      throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+    }
+
+    const admin = await this.userRepo.findUserByEmailWithPassword(currentUser.email);
+
+    if (!admin || admin.role !== "Admin" || !admin.password) {
+      throw new apiError(Errors.NotFound.code, "Admin user not found");
+    }
+
+    const passwordMatched = await this.hashUtils.verifyPassword(
+      currentPassword,
+      admin.password
+    );
+
+    if (!passwordMatched) {
+      throw new apiError(Errors.Unauthorized.code, "Current password is incorrect");
+    }
+
+    const isSamePassword = await this.hashUtils.verifyPassword(
+      newPassword,
+      admin.password
+    );
+
+    if (isSamePassword) {
+      throw new apiError(400, "New password must be different from current password");
+    }
+
+    const hashedPassword = await this.hashUtils.hashPassword(newPassword);
+    await this.userRepo.updateUserPassword(admin._id, hashedPassword);
+
+    return {
+      message: "Admin password changed successfully",
+    };
+  };
+
   verifyAdminResetOtp = async (email: string, otp: number) => {
     const admin = await this.userRepo.findUserByEmail(email);
 

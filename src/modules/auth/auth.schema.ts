@@ -54,6 +54,22 @@ export const forgotAdminPasswordSchema = z.object({
   email: z.email(),
 });
 
+export const changeAdminPasswordSchema = z
+  .object({
+    currentPassword: z.string().min(6, "Password must be at least 6 characters"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
+  });
+
 export const verifyAdminResetOtpSchema = z.object({
   email: z.email(),
   otp: z.coerce.number().int().min(100000).max(999999),
