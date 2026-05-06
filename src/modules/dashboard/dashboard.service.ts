@@ -38,14 +38,16 @@ export class DashboardService {
     };
   }
 
-  getAdminDashboard = async (currentUser: any, query: DashboardQuery) => {
+  private ensureAdmin(currentUser: any) {
     if (currentUser.role !== "Admin") {
       throw new apiError(Errors.Forbidden.code, "Only admin can access dashboard data");
     }
+  }
 
+  private buildFilters(query: DashboardQuery) {
     const { dateFrom, dateTo } = this.getDateRange(query);
 
-    const filters = {
+    return {
       ...query,
       dateFrom,
       dateTo,
@@ -53,6 +55,12 @@ export class DashboardService {
       hotAreaLimit: query.hotAreaLimit ?? 5,
       groupBy: query.groupBy ?? "daily",
     };
+  }
+
+  getAdminDashboard = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+
+    const filters = this.buildFilters(query);
 
     const [
       overview,
@@ -80,8 +88,8 @@ export class DashboardService {
     return {
       filters: {
         ...query,
-        dateFrom,
-        dateTo,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
       },
       overview,
       revenueTrend,
@@ -123,5 +131,91 @@ export class DashboardService {
       })),
       paymentStatusBreakdown,
     };
+  };
+
+  getOverview = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+    return this.dashboardRepository.getOverview(this.buildFilters(query));
+  };
+
+  getRevenueTrend = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+    return this.dashboardRepository.getRevenueTrend(this.buildFilters(query));
+  };
+
+  getUserGrowth = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+    return this.dashboardRepository.getUserGrowth(this.buildFilters(query));
+  };
+
+  getRiderGrowth = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+    return this.dashboardRepository.getRiderGrowth(this.buildFilters(query));
+  };
+
+  getIncomeGrowth = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+    return this.dashboardRepository.getIncomeGrowth(this.buildFilters(query));
+  };
+
+  getRecentOrders = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+
+    const recentOrders = await this.dashboardRepository.getRecentOrders(
+      this.buildFilters(query)
+    );
+
+    return recentOrders.map((order: any) => ({
+      orderId: String(order._id),
+      customer: order.user
+        ? {
+            id: String(order.user._id),
+            fullName: `${order.user.firstName || ""} ${order.user.lastName || ""}`.trim(),
+            phoneNumber: order.user.phoneNumber,
+          }
+        : null,
+      status: order.status,
+      amount: order.price,
+      paymentStatus: order.paymentStatus,
+      area:
+        order.pickup?.label ||
+        order.pickup?.addressLine ||
+        order.dropoff?.label ||
+        order.dropoff?.addressLine ||
+        "Unknown Area",
+      createdAt: order.createdAt,
+    }));
+  };
+
+  getEarnings = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+
+    const earnings = await this.dashboardRepository.getEarnings(this.buildFilters(query));
+
+    return earnings.map((order: any) => ({
+      fullName: order.user
+        ? `${order.user.firstName || ""} ${order.user.lastName || ""}`.trim()
+        : "Unknown User",
+      date: order.createdAt,
+      commission: Number((order.price * 0.1).toFixed(2)),
+      parcel: String(order._id),
+    }));
+  };
+
+  getHotAreas = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+
+    const hotAreas = await this.dashboardRepository.getHotAreas(this.buildFilters(query));
+
+    return hotAreas.map((area: any) => ({
+      areaName: area.area,
+      numberOfRiders: area.totalRiders,
+      numberOfOrders: area.totalOrders,
+    }));
+  };
+
+  getPaymentStatusBreakdown = async (currentUser: any, query: DashboardQuery) => {
+    this.ensureAdmin(currentUser);
+    return this.dashboardRepository.getPaymentStatusBreakdown(this.buildFilters(query));
   };
 }

@@ -6,6 +6,22 @@ import { HttpCodes } from "../../constants/status-codes";
 export class CommonController {
   constructor(private commonService: CommonService) {}
 
+  private formatContentResponse(content: any) {
+    return {
+      about: content?.about ?? "",
+      privacyPolicy: content?.privacyPolicy ?? "",
+      termsAndConditions: content?.termsAndConditions ?? "",
+    };
+  }
+
+  private formatDeliverySettingsResponse(content: any) {
+    return {
+      baseDeliveryCharge: content?.deliverySettings?.baseDeliveryCharge ?? 0,
+      chargePerMile: content?.deliverySettings?.chargePerMile ?? 0,
+      minimumDistanceMiles: content?.deliverySettings?.minimumDistanceMiles ?? 0,
+    };
+  }
+
   getContent = asyncHandler(
     async (_req: Request, res: Response, _next: NextFunction) => {
       const content = await this.commonService.getContent();
@@ -18,40 +34,14 @@ export class CommonController {
     }
   );
 
-  updateAbout = asyncHandler(
+  updateContent = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
-      const content = await this.commonService.updateAbout(req.body.content);
+      const content = await this.commonService.updateContent(req.body);
 
       res.status(HttpCodes.Ok).json({
         success: true,
-        message: "About updated successfully",
-        data: content,
-      });
-    }
-  );
-
-  updatePrivacyPolicy = asyncHandler(
-    async (req: Request, res: Response, _next: NextFunction) => {
-      const content = await this.commonService.updatePrivacyPolicy(req.body.content);
-
-      res.status(HttpCodes.Ok).json({
-        success: true,
-        message: "Privacy policy updated successfully",
-        data: content,
-      });
-    }
-  );
-
-  updateTermsAndConditions = asyncHandler(
-    async (req: Request, res: Response, _next: NextFunction) => {
-      const content = await this.commonService.updateTermsAndConditions(
-        req.body.content
-      );
-
-      res.status(HttpCodes.Ok).json({
-        success: true,
-        message: "Terms & conditions updated successfully",
-        data: content,
+        message: "Common content updated successfully",
+        data: this.formatContentResponse(content),
       });
     }
   );
@@ -63,7 +53,7 @@ export class CommonController {
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "Delivery settings updated successfully",
-        data: content,
+        data: this.formatDeliverySettingsResponse(content),
       });
     }
   );

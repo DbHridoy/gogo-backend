@@ -11,27 +11,11 @@ const commonRoute = Router();
 commonRoute.get("/", commonController.getContent);
 
 commonRoute.patch(
-  "/about",
+  "/content",
   authMiddleware.authenticate,
   authMiddleware.authorize(["Admin"]),
   validate(UpdateCommonContentSchema),
-  commonController.updateAbout
-);
-
-commonRoute.patch(
-  "/privacy-policy",
-  authMiddleware.authenticate,
-  authMiddleware.authorize(["Admin"]),
-  validate(UpdateCommonContentSchema),
-  commonController.updatePrivacyPolicy
-);
-
-commonRoute.patch(
-  "/terms-and-conditions",
-  authMiddleware.authenticate,
-  authMiddleware.authorize(["Admin"]),
-  validate(UpdateCommonContentSchema),
-  commonController.updateTermsAndConditions
+  commonController.updateContent
 );
 
 commonRoute.patch(

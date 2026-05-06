@@ -1,8 +1,8 @@
 import Common from "./common.model";
 
 export class CommonRepository {
-  getContent = async () => {
-    return await Common.findOneAndUpdate(
+  private ensureSingletonDocument = async () => {
+    await Common.findOneAndUpdate(
       { key: "singleton" },
       {
         $setOnInsert: {
@@ -18,15 +18,21 @@ export class CommonRepository {
     );
   };
 
-  updateContent = async (
-    field: "about" | "privacyPolicy" | "termsAndConditions",
-    content: string
-  ) => {
+  getContent = async () => {
+    await this.ensureSingletonDocument();
+    return await Common.findOne({ key: "singleton" });
+  };
+
+  updateContent = async (content: {
+    about?: string;
+    privacyPolicy?: string;
+    termsAndConditions?: string;
+  }) => {
     return await Common.findOneAndUpdate(
       { key: "singleton" },
       {
         $setOnInsert: { key: "singleton" },
-        $set: { [field]: content },
+        $set: content,
       },
       { upsert: true, new: true }
     );
@@ -37,6 +43,8 @@ export class CommonRepository {
     chargePerMile?: number;
     minimumDistanceMiles?: number;
   }) => {
+    await this.ensureSingletonDocument();
+
     const updatePayload = Object.fromEntries(
       Object.entries(settings).map(([key, value]) => [`deliverySettings.${key}`, value])
     );
@@ -44,17 +52,9 @@ export class CommonRepository {
     return await Common.findOneAndUpdate(
       { key: "singleton" },
       {
-        $setOnInsert: {
-          key: "singleton",
-          deliverySettings: {
-            baseDeliveryCharge: 0,
-            chargePerMile: 0,
-            minimumDistanceMiles: 0,
-          },
-        },
         $set: updatePayload,
       },
-      { upsert: true, new: true }
+      { new: true }
     );
   };
 }

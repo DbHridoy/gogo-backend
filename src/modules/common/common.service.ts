@@ -7,16 +7,12 @@ export class CommonService {
     return await this.commonRepo.getContent();
   };
 
-  updateAbout = async (content: string) => {
-    return await this.commonRepo.updateContent("about", content);
-  };
-
-  updatePrivacyPolicy = async (content: string) => {
-    return await this.commonRepo.updateContent("privacyPolicy", content);
-  };
-
-  updateTermsAndConditions = async (content: string) => {
-    return await this.commonRepo.updateContent("termsAndConditions", content);
+  updateContent = async (content: {
+    about?: string;
+    privacyPolicy?: string;
+    termsAndConditions?: string;
+  }) => {
+    return await this.commonRepo.updateContent(content);
   };
 
   updateDeliverySettings = async (settings: {

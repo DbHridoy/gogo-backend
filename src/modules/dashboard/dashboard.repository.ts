@@ -153,6 +153,11 @@ export class DashboardRepository {
                 $cond: [{ $eq: ["$status", "Completed"] }, 1, 0],
               },
             },
+            cancelledOrdersCurrentPeriod: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0],
+              },
+            },
             paidOrdersCurrentPeriod: {
               $sum: {
                 $cond: [{ $eq: ["$paymentStatus", "Paid"] }, 1, 0],
@@ -176,6 +181,7 @@ export class DashboardRepository {
       totalRevenue: 0,
       activeOrdersCurrentPeriod: 0,
       completedOrdersCurrentPeriod: 0,
+      cancelledOrdersCurrentPeriod: 0,
       paidOrdersCurrentPeriod: 0,
       totalOrderValue: 0,
     };
@@ -194,6 +200,7 @@ export class DashboardRepository {
       activeUsersCurrentPeriod: userStats[2].length,
       activeOrdersCurrentPeriod: orderMetrics.activeOrdersCurrentPeriod,
       completedOrdersCurrentPeriod: orderMetrics.completedOrdersCurrentPeriod,
+      cancelledOrdersCurrentPeriod: orderMetrics.cancelledOrdersCurrentPeriod,
       paidOrdersCurrentPeriod: orderMetrics.paidOrdersCurrentPeriod,
       averageOrderValue:
         orderMetrics.totalOrders > 0
