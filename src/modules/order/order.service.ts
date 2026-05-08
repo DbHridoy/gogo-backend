@@ -329,6 +329,56 @@ export class OrderService {
     });
   };
 
+  submitCompletionProof = async (
+    currentUser: any,
+    orderId: string,
+    payload: { images: string[]; note?: string }
+  ) => {
+    const order = await this.orderRepo.getOrderById(orderId);
+
+    if (!order) {
+      throw new apiError(Errors.NotFound.code, "Order not found");
+    }
+
+    if (currentUser.role !== "Rider") {
+      throw new apiError(
+        Errors.Forbidden.code,
+        "Only the assigned rider can submit completion proof"
+      );
+    }
+
+    if (this.getActorId(order.rider) !== currentUser.userId) {
+      throw new apiError(
+        Errors.Forbidden.code,
+        "Only the assigned rider can submit completion proof"
+      );
+    }
+
+    if (order.status !== "Completed") {
+      throw new apiError(
+        400,
+        "Completion proof can only be submitted after order completion"
+      );
+    }
+
+    if ((order as any).completionProof) {
+      throw new apiError(400, "Completion proof already submitted for this order");
+    }
+
+    if (!payload.images.length) {
+      throw new apiError(400, "At least one completion proof image is required");
+    }
+
+    return this.orderRepo.updateOrder(orderId, {
+      completionProof: {
+        images: payload.images,
+        note: payload.note,
+        submittedAt: new Date(),
+        submittedBy: currentUser.userId,
+      },
+    });
+  };
+
   deleteOrder = async (currentUser: any, id: string) => {
     if (currentUser.role !== "Admin") {
       throw new apiError(Errors.Forbidden.code, "Only admin can delete order");

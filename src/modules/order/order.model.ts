@@ -66,6 +66,10 @@ const orderReviewSchema = new Schema(
       required: true,
       min: 1,
       max: 5,
+      validate: {
+        validator: Number.isInteger,
+        message: "Rating must be a whole number from 1 to 5",
+      },
     },
     comment: {
       type: String,
@@ -73,6 +77,33 @@ const orderReviewSchema = new Schema(
     },
     reviewedAt: {
       type: Date,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
+const completionProofSchema = new Schema(
+  {
+    images: {
+      type: [String],
+      required: true,
+      validate: {
+        validator: (value: string[]) => Array.isArray(value) && value.length > 0,
+        message: "At least one completion proof image is required",
+      },
+    },
+    note: {
+      type: String,
+      trim: true,
+    },
+    submittedAt: {
+      type: Date,
+      required: true,
+    },
+    submittedBy: {
+      type: Types.ObjectId,
+      ref: "User",
       required: true,
     },
   },
@@ -184,6 +215,10 @@ const orderSchema = new Schema(
     },
     review: {
       type: orderReviewSchema,
+      default: null,
+    },
+    completionProof: {
+      type: completionProofSchema,
       default: null,
     },
   },

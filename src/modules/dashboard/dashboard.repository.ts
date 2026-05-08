@@ -320,6 +320,8 @@ export class DashboardRepository {
 
     return Order.find(orderMatch)
       .populate("user", "firstName lastName phoneNumber")
+      .populate("rider", "firstName lastName phoneNumber")
+      .populate("completionProof.submittedBy", "firstName lastName phoneNumber role")
       .sort({ createdAt: -1 })
       .limit(filters.recentLimit)
       .lean();

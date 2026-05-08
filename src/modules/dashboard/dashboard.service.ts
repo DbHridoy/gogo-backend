@@ -105,9 +105,18 @@ export class DashboardService {
               phoneNumber: order.user.phoneNumber,
             }
           : null,
+        rider: order.rider
+          ? {
+              id: String(order.rider._id),
+              fullName: `${order.rider.firstName || ""} ${order.rider.lastName || ""}`.trim(),
+              phoneNumber: order.rider.phoneNumber,
+            }
+          : null,
         status: order.status,
         amount: order.price,
         paymentStatus: order.paymentStatus,
+        review: order.review || null,
+        completionProof: order.completionProof || null,
         area:
           order.pickup?.label ||
           order.pickup?.addressLine ||
@@ -174,9 +183,18 @@ export class DashboardService {
             phoneNumber: order.user.phoneNumber,
           }
         : null,
+      rider: order.rider
+        ? {
+            id: String(order.rider._id),
+            fullName: `${order.rider.firstName || ""} ${order.rider.lastName || ""}`.trim(),
+            phoneNumber: order.rider.phoneNumber,
+          }
+        : null,
       status: order.status,
       amount: order.price,
       paymentStatus: order.paymentStatus,
+      review: order.review || null,
+      completionProof: order.completionProof || null,
       area:
         order.pickup?.label ||
         order.pickup?.addressLine ||

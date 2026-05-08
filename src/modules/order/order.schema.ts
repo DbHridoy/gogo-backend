@@ -40,8 +40,12 @@ export const UpdateOrderPriceSchema = z.object({
 });
 
 export const AddOrderReviewSchema = z.object({
-  rating: z.number().min(1).max(5),
+  rating: z.number().int().min(1).max(5),
   comment: z.string().trim().optional(),
+});
+
+export const SubmitCompletionProofSchema = z.object({
+  note: z.string().trim().optional(),
 });
 
 export const MarkCheckpointSchema = z

@@ -186,6 +186,34 @@ export class OrderController {
     }
   );
 
+  submitCompletionProof = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      if (!req.user) {
+        throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      }
+
+      const files = Array.isArray(req.files) ? req.files : [];
+      const images = files
+        .map((file) => (file as Express.Multer.File & { fileUrl?: string }).fileUrl)
+        .filter((fileUrl): fileUrl is string => Boolean(fileUrl));
+
+      const order = await this.orderService.submitCompletionProof(
+        req.user,
+        req.params.id,
+        {
+          images,
+          note: req.body.note,
+        }
+      );
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Order completion proof submitted successfully",
+        data: order,
+      });
+    }
+  );
+
   deleteOrder = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
       if (!req.user) {

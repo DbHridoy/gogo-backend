@@ -54,13 +54,15 @@ export class OrderRepository {
   getOrderById = async (id: string) => {
     return Order.findById(id)
       .populate("user", "firstName lastName phoneNumber role")
-      .populate("rider", "firstName lastName phoneNumber role");
+      .populate("rider", "firstName lastName phoneNumber role")
+      .populate("completionProof.submittedBy", "firstName lastName phoneNumber role");
   };
 
   updateOrder = async (id: string, payload: any) => {
     return Order.findByIdAndUpdate(id, payload, { new: true })
       .populate("user", "firstName lastName phoneNumber role")
-      .populate("rider", "firstName lastName phoneNumber role");
+      .populate("rider", "firstName lastName phoneNumber role")
+      .populate("completionProof.submittedBy", "firstName lastName phoneNumber role");
   };
 
   getOrderSummary = async (currentUser: any) => {

@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { authMiddleware, orderController } from "../../container";
 import { validate } from "../../middlewares/validate.middleware";
+import { uploadFile } from "../../middlewares/upload.middleware";
 import {
   AddOrderReviewSchema,
   AssignRiderSchema,
   CreateOrderSchema,
   MarkCheckpointSchema,
+  SubmitCompletionProofSchema,
   UpdateOrderPriceSchema,
   UpdateOrderStatusSchema,
 } from "./order.schema";
@@ -44,6 +46,18 @@ orderRoute.patch(
   "/:id/review",
   validate(AddOrderReviewSchema),
   orderController.addReview
+);
+orderRoute.patch(
+  "/:id/completion-proof",
+  authMiddleware.authorize(["Rider"]),
+  uploadFile({
+    fieldName: "images",
+    uploadType: "array",
+    maxCount: 10,
+    folder: "order-completion-proofs",
+  }),
+  validate(SubmitCompletionProofSchema),
+  orderController.submitCompletionProof
 );
 orderRoute.patch("/:id/cancel", orderController.cancelOrder);
 
