@@ -314,4 +314,31 @@ export class AuthService {
       firebaseUid: decodedToken.uid,
     };
   }
+  async refreshToken(token: string) {
+    try {
+      const decoded = (await this.jwtUtils.verifyRefreshToken(token)) as any;
+      const user = await this.userRepo.findUserByEmail(decoded.email);
+
+      if (!user) {
+        throw new apiError(Errors.NotFound.code, "User not found");
+      }
+
+      if (user.role === "Rider" && user.status === "Pending") {
+        throw new apiError(Errors.Forbidden.code, "Account is pending approval");
+      }
+
+      const payload = this.buildTokenPayload(user);
+      const { accessToken, refreshToken } = await this.jwtUtils.generateBothTokens(
+        payload
+      );
+
+      return {
+        accessToken,
+        refreshToken,
+        user,
+      };
+    } catch (error) {
+      throw new apiError(401, "Invalid or expired refresh token");
+    }
+  }
 }

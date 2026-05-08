@@ -56,7 +56,7 @@ authRoute.post(
 authRoute.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
 // authRoute.post("/send-otp", authController.sendOtp);
 // authRoute.post("/set-new-password", authController.setNewPassword);
-// authRoute.post("/refresh-token", authController.refreshToken);
+authRoute.post("/refresh-token", authController.refreshToken);
 authRoute.post("/logout", authController.logout);
 
 export default authRoute;
