@@ -11,15 +11,20 @@ export class AuthController {
 
   checkUserByPhoneNumber = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
-      const result = await this.authService.checkUserByPhoneNumber(
-        req.body.phoneNumber
-      );
+      try {
+        const result = await this.authService.checkUserByPhoneNumber(
+          req.body.phoneNumber
+        );
 
-      res.status(HttpCodes.Ok).json({
-        success: true,
-        message: result.message,
-        data: result,
-      });
+        res.status(HttpCodes.Ok).json({
+          success: true,
+          message: result.message,
+          data: result,
+        });
+      } catch (error) {
+        logger.error(error, "Error in checkUserByPhoneNumber:");
+        throw error;
+      }
     }
   );
 
