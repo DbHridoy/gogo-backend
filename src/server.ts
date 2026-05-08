@@ -20,4 +20,6 @@ const startServer = async () => {
     process.exit(1);
   }
 };
-startServer();
+if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
+  startServer();
+}
