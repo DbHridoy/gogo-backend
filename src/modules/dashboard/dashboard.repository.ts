@@ -304,7 +304,7 @@ export class DashboardRepository {
   getRevenueTrend = async (filters: DashboardFilters) => {
     const orderMatch = this.buildOrderMatch(filters);
 
-    return Order.aggregate([
+    const results = await Order.aggregate([
       {
         $match: {
           ...orderMatch,
@@ -313,21 +313,21 @@ export class DashboardRepository {
       },
       {
         $group: {
-          _id: this.buildPeriodExpression(filters.groupBy),
+          _id: { $month: "$createdAt" },
           revenue: { $sum: "$price" },
-          orders: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
       {
         $project: {
           _id: 0,
-          period: "$_id",
-          revenue: 1,
-          orders: 1,
+          month: "$_id",
+          value: "$revenue",
         },
       },
     ]);
+
+    return this.buildMonthlySeries(results, "revenue");
   };
 
   getUserGrowth = async (filters: DashboardFilters) => {
