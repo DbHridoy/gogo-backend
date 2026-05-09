@@ -11,15 +11,20 @@ export class AuthController {
 
   checkUserByPhoneNumber = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
-      const result = await this.authService.checkUserByPhoneNumber(
-        req.body.phoneNumber
-      );
+      try {
+        const result = await this.authService.checkUserByPhoneNumber(
+          req.body.phoneNumber
+        );
 
-      res.status(HttpCodes.Ok).json({
-        success: true,
-        message: result.message,
-        data: result,
-      });
+        res.status(HttpCodes.Ok).json({
+          success: true,
+          message: result.message,
+          data: result,
+        });
+      } catch (error) {
+        logger.error(error, "Error in checkUserByPhoneNumber:");
+        throw error;
+      }
     }
   );
 
@@ -176,32 +181,31 @@ export class AuthController {
   //   }
   // );
 
-  // refreshToken = asyncHandler(
-  //   async (req: Request, res: Response, _next: NextFunction) => {
-  //     const refreshToken = req.cookies?.refreshToken;
-  //     logger.info(refreshToken, "AuthController.refreshToken line:106");
-  //     if (!refreshToken) {
-  //       throw new apiError(Errors.NoToken.code, "Refresh token is required");
-  //     }
+  refreshToken = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+      
+      if (!refreshToken) {
+        throw new apiError(Errors.NoToken.code, "Refresh token is required");
+      }
 
-  //     const result = await this.authService.refreshToken(refreshToken);
+      const result = await this.authService.refreshToken(refreshToken);
 
-  //     // Optionally update the cookie with new refresh token
-  //     res.cookie("refreshToken", result.refreshToken, {
-  //       httpOnly: true,
-  //       secure: false, // HTTP in dev
-  //       sameSite: "lax", // works on cross-port dev
-  //       maxAge: 7 * 24 * 60 * 60 * 1000,
-  //       path: "/auth/refresh-token",
-  //     });
+      // Update the cookie with new refresh token
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
-  //     const responseData = {
-  //       ...result,
-  //     };
-
-  //     res.status(HttpCodes.Ok).json(responseData);
-  //   }
-  // );
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Token refreshed successfully",
+        data: result,
+      });
+    }
+  );
 
   logout = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
