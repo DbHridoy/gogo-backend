@@ -6,6 +6,7 @@ export const dashboardQuerySchema = z
       .enum(["daily", "weekly", "monthly", "yearly"])
       .optional()
       .default("daily"),
+    year: z.coerce.number().int().min(1970).max(3000).optional(),
     dateFrom: z.iso.datetime().optional(),
     dateTo: z.iso.datetime().optional(),
     status: z

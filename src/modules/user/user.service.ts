@@ -28,8 +28,29 @@ export class UserService {
   };
 
   getAllUsers = async (query: any) => {
-    return await this.userRepo.getAllUsers(query)
-  }
+    const [users, stats] = await Promise.all([
+      this.userRepo.getAllUsers(query),
+      this.userRepo.getUserStats(),
+    ]);
+
+    return {
+      ...users,
+      stats,
+    };
+  };
+
+  getAllRiders = async (query: any) => {
+    const [riders, stats] = await Promise.all([
+      this.userRepo.getAllRiders(query),
+      this.userRepo.getRiderStats(),
+    ]);
+
+    return {
+      ...riders,
+      stats,
+    };
+  };
+
   getUserById = async (id: string) => {
     return await this.userRepo.findUserById(id)
   }
@@ -53,11 +74,13 @@ export class UserService {
       throw new apiError(Errors.Forbidden.code, "Only riders can update location");
     }
 
-    if (user.status === "Pending") {
-      throw new apiError(
-        Errors.Forbidden.code,
-        "Rider account is pending admin approval"
-      );
+    if (user.status !== "Approved") {
+      const message =
+        user.status === "Blocked"
+          ? "Rider account is blocked"
+          : "Rider account is pending admin approval";
+
+      throw new apiError(Errors.Forbidden.code, message);
     }
 
     return await this.userRepo.updateUserLocation(currentUser.userId, {
@@ -75,12 +98,16 @@ export class UserService {
     }
 
     if (body.status) {
-      if (existingUser.role !== "Rider") {
-        throw new apiError(400, "Status can only be updated for rider accounts");
+      if (existingUser.role === "Admin") {
+        throw new apiError(400, "Admin account status cannot be updated here");
       }
 
-      if (!["Pending", "Approved"].includes(body.status)) {
-        throw new apiError(400, "Invalid rider status");
+      if (!["Pending", "Approved", "Blocked"].includes(body.status)) {
+        throw new apiError(400, "Invalid user status");
+      }
+
+      if (existingUser.role === "User" && body.status === "Pending") {
+        throw new apiError(400, "Pending status is only valid for rider accounts");
       }
     }
 

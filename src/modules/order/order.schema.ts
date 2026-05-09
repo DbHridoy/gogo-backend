@@ -20,6 +20,12 @@ export const CreateOrderSchema = z.object({
   notes: z.string().trim().optional(),
 });
 
+export const EstimateOrderPriceSchema = z.object({
+  distanceKm: z.number().min(0),
+  durationMin: z.number().min(0),
+  vehicleType: z.enum(["Bike", "Car", "Truck"]),
+});
+
 export const AssignRiderSchema = z.object({
   riderId: z.string().min(1),
 });
