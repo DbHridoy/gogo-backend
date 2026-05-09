@@ -1,9 +1,12 @@
 import { createServer } from "http";
+import dns from "dns";
 import app from "./app";
 import connectDB from "./config/database";
 import { env } from "./config/env";
 import { logger } from "./utils/logger";
 import { initSocket } from "./config/socket";
+
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const startServer = async () => {
   try {
@@ -12,11 +15,11 @@ const startServer = async () => {
     initSocket(server);
     server.listen(env.PORT, () => {
       logger.info(
-        `Server is running on port http://localhost:${env.PORT}/api/v1`
+        `Server is running on port http://localhost:${env.PORT}/api/v1`,
       );
     });
   } catch (error) {
-    logger.error(error, "Failed to start the server:")
+    logger.error(error, "Failed to start the server:");
     process.exit(1);
   }
 };
