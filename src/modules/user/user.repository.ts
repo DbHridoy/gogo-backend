@@ -34,9 +34,9 @@ export class UserRepository {
     const { filter, search, options } = this.buildDynamicSearch(User, query);
 
     const baseQuery = {
-      role: { $ne: "Admin" },
       ...filter,
       ...search,
+      role: "User",
     };
 
     const [users, total] = await Promise.all([
@@ -45,6 +45,114 @@ export class UserRepository {
     ]);
 
     return { data: users, total };
+  };
+
+  getUserStats = async () => {
+    const stats = await User.aggregate([
+      {
+        $match: {
+          role: "User",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          activeUsers: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "Approved"] }, 1, 0],
+            },
+          },
+          blockedUsers: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "Blocked"] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalUsers: 1,
+          activeUsers: 1,
+          blockedUsers: 1,
+        },
+      },
+    ]);
+
+    return (
+      stats[0] || {
+        totalUsers: 0,
+        activeUsers: 0,
+        blockedUsers: 0,
+      }
+    );
+  };
+
+  getAllRiders = async (query: any) => {
+    const { filter, search, options } = this.buildDynamicSearch(User, query);
+
+    const baseQuery = {
+      ...filter,
+      ...search,
+      role: "Rider",
+    };
+
+    const [riders, total] = await Promise.all([
+      User.find(baseQuery, null, options),
+      User.countDocuments(baseQuery),
+    ]);
+
+    return { data: riders, total };
+  };
+
+  getRiderStats = async () => {
+    const stats = await User.aggregate([
+      {
+        $match: {
+          role: "Rider",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRiders: { $sum: 1 },
+          activeRiders: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "Approved"] }, 1, 0],
+            },
+          },
+          pendingRiders: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "Pending"] }, 1, 0],
+            },
+          },
+          blockedRiders: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "Blocked"] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRiders: 1,
+          activeRiders: 1,
+          pendingRiders: 1,
+          blockedRiders: 1,
+        },
+      },
+    ]);
+
+    return (
+      stats[0] || {
+        totalRiders: 0,
+        activeRiders: 0,
+        pendingRiders: 0,
+        blockedRiders: 0,
+      }
+    );
   };
 
   updateUserPassword = async (id: Types.ObjectId, hashedPassword: string) => {

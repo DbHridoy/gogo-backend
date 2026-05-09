@@ -87,7 +87,7 @@ const userSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Approved"],
+      enum: ["Pending", "Approved", "Blocked"],
       default: function () {
         return this.role === "Rider" ? "Pending" : "Approved";
       },

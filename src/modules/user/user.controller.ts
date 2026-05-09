@@ -44,6 +44,21 @@ export class UserController {
         message: "All users fetched successfully",
         data: users.data,
         total: users.total,
+        stats: users.stats,
+      });
+    }
+  );
+
+  getAllRiders = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const riders = await this.userService.getAllRiders(req.query);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "All riders fetched successfully",
+        data: riders.data,
+        total: riders.total,
+        stats: riders.stats,
       });
     }
   );

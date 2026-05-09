@@ -14,13 +14,8 @@ type DashboardFilters = {
 };
 
 export class DashboardRepository {
-  private buildOrderMatch(filters: DashboardFilters) {
-    const match: Record<string, any> = {
-      createdAt: {
-        $gte: filters.dateFrom,
-        $lte: filters.dateTo,
-      },
-    };
+  private buildOrderAttributeMatch(filters: DashboardFilters) {
+    const match: Record<string, any> = {};
 
     if (filters.status) {
       match.status = filters.status;
@@ -51,6 +46,18 @@ export class DashboardRepository {
         match.$or = searchConditions;
       }
     }
+
+    return match;
+  }
+
+  private buildOrderMatch(filters: DashboardFilters) {
+    const match: Record<string, any> = {
+      ...this.buildOrderAttributeMatch(filters),
+      createdAt: {
+        $gte: filters.dateFrom,
+        $lte: filters.dateTo,
+      },
+    };
 
     return match;
   }
@@ -100,11 +107,62 @@ export class DashboardRepository {
     };
   }
 
+  private getCurrentRevenueRanges() {
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const monthStart = new Date(now);
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    return { now, todayStart, monthStart };
+  }
+
+  private getRevenueSummary = async (filters: DashboardFilters) => {
+    const { now, todayStart, monthStart } = this.getCurrentRevenueRanges();
+    const baseMatch = this.buildOrderAttributeMatch(filters);
+
+    const revenueStats = await Order.aggregate([
+      {
+        $match: {
+          ...baseMatch,
+          paymentStatus: "Paid",
+          createdAt: { $lte: now },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$price" },
+          thisMonthRevenue: {
+            $sum: {
+              $cond: [{ $gte: ["$createdAt", monthStart] }, "$price", 0],
+            },
+          },
+          todayRevenue: {
+            $sum: {
+              $cond: [{ $gte: ["$createdAt", todayStart] }, "$price", 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    return (
+      revenueStats[0] || {
+        totalRevenue: 0,
+        thisMonthRevenue: 0,
+        todayRevenue: 0,
+      }
+    );
+  };
+
   getOverview = async (filters: DashboardFilters) => {
     const orderMatch = this.buildOrderMatch(filters);
     const activeStatuses = ["Pending", "Accepted", "ArrivedPickup", "InProgress"];
 
-    const [orderStats, userStats] = await Promise.all([
+    const [orderStats, userStats, revenueSummary] = await Promise.all([
       Order.aggregate([
         { $match: orderMatch },
         {
@@ -172,6 +230,7 @@ export class DashboardRepository {
         User.countDocuments({ role: "Rider" }),
         Order.distinct("user", orderMatch),
       ]),
+      this.getRevenueSummary(filters),
     ]);
 
     const orderMetrics = orderStats[0] || {
@@ -190,8 +249,11 @@ export class DashboardRepository {
       totalUsers: userStats[0],
       totalRiders: userStats[1],
       totalOrders: orderMetrics.totalOrders,
-      totalEarning: orderMetrics.totalRevenue,
-      totalRevenue: orderMetrics.totalRevenue,
+      totalEarning: revenueSummary.totalRevenue,
+      totalRevenue: revenueSummary.totalRevenue,
+      thisMonthRevenue: revenueSummary.thisMonthRevenue,
+      todayRevenue: revenueSummary.todayRevenue,
+      currentPeriodRevenue: orderMetrics.totalRevenue,
       activeDrivers: orderMetrics.activeRiders.length,
       avgOrdersPerArea:
         orderMetrics.areas.length > 0
