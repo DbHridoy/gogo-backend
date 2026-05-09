@@ -48,6 +48,19 @@ export class AuthService {
     role: user.role,
   });
 
+  private ensureUserCanLogin(user: any) {
+    if (user.status === "Blocked") {
+      throw new apiError(Errors.Forbidden.code, "User account is blocked");
+    }
+
+    if (user.role === "Rider" && user.status !== "Approved") {
+      throw new apiError(
+        Errors.Forbidden.code,
+        "Rider account is pending admin approval"
+      );
+    }
+  }
+
   checkUserByPhoneNumber = async (phoneNumber: string) => {
     const user = await this.userRepo.findUserByPhoneNumber(phoneNumber);
 
@@ -116,9 +129,7 @@ export class AuthService {
       throw new apiError(Errors.NotFound.code, "User not found");
     }
 
-    if (user.role === "Rider" && user.status === "Pending") {
-      throw new apiError(Errors.Forbidden.code, "Rider account is pending admin approval");
-    }
+    this.ensureUserCanLogin(user);
 
     return {
       success: true,
@@ -298,9 +309,7 @@ export class AuthService {
       throw new apiError(Errors.NotFound.code, "User not found");
     }
 
-    if (user.role === "Rider" && user.status === "Pending") {
-      throw new apiError(Errors.Forbidden.code, "Rider account is pending admin approval");
-    }
+    this.ensureUserCanLogin(user);
 
     const payload = this.buildTokenPayload(user);
     const { accessToken, refreshToken } = await this.jwtUtils.generateBothTokens(

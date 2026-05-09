@@ -6,6 +6,7 @@ import {
   AddOrderReviewSchema,
   AssignRiderSchema,
   CreateOrderSchema,
+  EstimateOrderPriceSchema,
   MarkCheckpointSchema,
   SubmitCompletionProofSchema,
   UpdateOrderPriceSchema,
@@ -17,6 +18,11 @@ const orderRoute = Router();
 orderRoute.use(authMiddleware.authenticate);
 
 orderRoute.get("/summary", orderController.getOrderSummary);
+orderRoute.post(
+  "/estimate-price",
+  validate(EstimateOrderPriceSchema),
+  orderController.estimatePrice
+);
 orderRoute.post("/", validate(CreateOrderSchema), orderController.createOrder);
 orderRoute.get("/", orderController.getAllOrders);
 orderRoute.get("/:id", orderController.getOrderById);

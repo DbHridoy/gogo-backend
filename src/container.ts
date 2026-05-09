@@ -47,17 +47,21 @@ export const authService = new AuthService(
 export const authMiddleware = new AuthMiddleware(jwtUtils, userRepository);
 export const authController = new AuthController(authService);
 
+export const commonRepository = new CommonRepository();
+export const commonService = new CommonService(commonRepository);
+export const commonController = new CommonController(commonService);
+
 export const orderRepository = new OrderRepository();
-export const orderService = new OrderService(orderRepository, userRepository);
+export const orderService = new OrderService(
+  orderRepository,
+  userRepository,
+  commonRepository
+);
 export const orderController = new OrderController(orderService);
 
 export const paymentRepository = new PaymentRepository();
 export const paymentService = new PaymentService(paymentRepository, orderRepository);
 export const paymentController = new PaymentController(paymentService);
-
-export const commonRepository = new CommonRepository();
-export const commonService = new CommonService(commonRepository);
-export const commonController = new CommonController(commonService);
 
 export const dashboardRepository = new DashboardRepository();
 export const dashboardService = new DashboardService(dashboardRepository);
