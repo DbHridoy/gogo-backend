@@ -1,0 +1,3674 @@
+{
+  "info": {
+    "_postman_id": "f05d1b69-aadf-4b0d-a893-f737812a43b8",
+    "name": "Roshan Hegde Backend API",
+    "description": "Postman collection for the current Express API under /api/v1. Auth uses phone lookup plus Firebase OTP verification on the client, then Firebase ID token verification on the backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49547571",
+    "_collection_link": "https://sta888-6770.postman.co/workspace/sta-Workspace~4c66d5d6-2b1c-4d56-8a34-fb4e76dead96/collection/49547571-f05d1b69-aadf-4b0d-a893-f737812a43b8?action=share&source=collection_link&creator=49547571"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Root Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{serverUrl}}/",
+              "host": [
+                "{{serverUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API v1 Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Check User By Phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{userPhoneNumber}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-user"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const user = response?.data?.user;",
+                  "if (user?._id) pm.collectionVariables.set('userId', user._id);",
+                  "if (user?.phoneNumber) pm.collectionVariables.set('userPhoneNumber', user.phoneNumber);",
+                  "if (user?.email) pm.collectionVariables.set('userEmail', user.email);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"{{userPhoneNumber}}\",\n  \"email\": \"{{userEmail}}\",\n  \"companyName\": \"Demo Co\",\n  \"trnVatNo\": \"TRN-12345\",\n  \"referralCode\": \"REF-1A2B3C4D\",\n  \"role\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Rider",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const rider = response?.data?.user;",
+                  "if (rider?._id) pm.collectionVariables.set('riderId', rider._id);",
+                  "if (rider?.phoneNumber) pm.collectionVariables.set('riderPhoneNumber', rider.phoneNumber);",
+                  "if (rider?.email) pm.collectionVariables.set('riderEmail', rider.email);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Rafi\",\n  \"lastName\": \"Hasan\",\n  \"phoneNumber\": \"{{riderPhoneNumber}}\",\n  \"email\": \"{{riderEmail}}\",\n  \"companyName\": \"Delivery Fleet\",\n  \"trnVatNo\": \"TRN-67890\",\n  \"role\": \"Rider\",\n  \"emaratesId\": \"784-1987-1234567-1\",\n  \"drivingLicense\": \"DL-99887766\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "New riders are created with pending status and cannot log in until an admin approves them."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{userPhoneNumber}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "If the phone number exists, the backend responds that Firebase OTP must be completed on the client app."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP With Firebase ID Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const data = response?.data;",
+                  "if (data?.accessToken) {",
+                  "  pm.collectionVariables.set('authToken', data.accessToken);",
+                  "  pm.collectionVariables.set('userToken', data.accessToken);",
+                  "}",
+                  "if (data?.user?._id) pm.collectionVariables.set('userId', data.user._id);",
+                  "if (data?.user?.phoneNumber) pm.collectionVariables.set('userPhoneNumber', data.user.phoneNumber);",
+                  "if (data?.user?.email) pm.collectionVariables.set('userEmail', data.user.email);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{userPhoneNumber}}\",\n  \"idToken\": \"{{firebaseIdToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Use the Firebase ID token obtained after client-side phone OTP verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let response = {};",
+                  "try {",
+                  "  response = pm.response.json();",
+                  "} catch (error) {",
+                  "  pm.test('Response is JSON', function () {",
+                  "    throw new Error('Response body is not valid JSON');",
+                  "  });",
+                  "}",
+                  "const data = response?.data;",
+                  "pm.test('Admin login returns 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "if (data?.accessToken) {",
+                  "  pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "  pm.collectionVariables.set('authToken', data.accessToken);",
+                  "}",
+                  "if (data?.user?._id) pm.collectionVariables.set('adminUserId', data.user._id);",
+                  "if (data?.user?.email) pm.collectionVariables.set('adminEmail', data.user.email);",
+                  "pm.test('Admin access token is present', function () {",
+                  "  pm.expect(data?.accessToken).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Change Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin change password returns 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.collectionVariables.set('adminPassword', pm.collectionVariables.get('adminNewPassword'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{adminPassword}}\",\n  \"newPassword\": \"{{adminNewPassword}}\",\n  \"confirmPassword\": \"{{adminNewPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "change-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Verify Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"{{adminResetOtp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/verify-reset-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "verify-reset-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Reset Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('adminPassword', pm.collectionVariables.get('adminNewPassword'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"otp\": \"{{adminResetOtp}}\",\n  \"newPassword\": \"{{adminNewPassword}}\",\n  \"confirmPassword\": \"{{adminNewPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const user = response?.data;",
+                  "if (user?._id) pm.collectionVariables.set('createdUserId', user._id);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Created\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"{{createdUserPhoneNumber}}\",\n  \"email\": \"{{createdUserEmail}}\",\n  \"companyName\": \"Ops Team\",\n  \"trnVatNo\": \"TRN-00001\",\n  \"role\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20&search=john&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": "john"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin user-management list for normal users. Response includes stats: totalUsers, activeUsers, blockedUsers."
+          },
+          "response": [
+            {
+              "name": "Success - User Stats",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users?page=1&limit=20&search=john&sort=-createdAt",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "search",
+                      "value": "john"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "-createdAt"
+                    }
+                  ]
+                },
+                "description": "Admin user-management list for normal users. Response includes stats: totalUsers, activeUsers, blockedUsers."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"All users fetched successfully\",\n  \"data\": [\n    {\n      \"_id\": \"665000000000000000000020\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Customer\",\n      \"phoneNumber\": \"+8801700000000\",\n      \"email\": \"john@example.com\",\n      \"role\": \"User\",\n      \"status\": \"Approved\",\n      \"createdAt\": \"2026-05-01T10:00:00.000Z\",\n      \"updatedAt\": \"2026-05-09T07:00:00.000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"stats\": {\n    \"totalUsers\": 48,\n    \"activeUsers\": 45,\n    \"blockedUsers\": 3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Active Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20&status=Approved&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "Approved"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin user-management list filtered to active normal users."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users?page=1&limit=20&status=Approved&sort=-createdAt",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "status",
+                      "value": "Approved"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "-createdAt"
+                    }
+                  ]
+                },
+                "description": "Admin user-management list filtered to active normal users."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"All users fetched successfully\",\n  \"data\": [\n    {\n      \"_id\": \"665000000000000000000020\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Customer\",\n      \"phoneNumber\": \"+8801700000000\",\n      \"email\": \"john@example.com\",\n      \"role\": \"User\",\n      \"status\": \"Approved\",\n      \"createdAt\": \"2026-05-01T10:00:00.000Z\",\n      \"updatedAt\": \"2026-05-09T07:00:00.000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"stats\": {\n    \"totalUsers\": 48,\n    \"activeUsers\": 45,\n    \"blockedUsers\": 3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Blocked Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20&status=Blocked&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "Blocked"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin user-management list filtered to blocked normal users. Response also includes total/active/blocked user stats."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users?page=1&limit=20&status=Blocked&sort=-createdAt",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "status",
+                      "value": "Blocked"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "-createdAt"
+                    }
+                  ]
+                },
+                "description": "Admin user-management list filtered to blocked normal users. Response also includes total/active/blocked user stats."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"All users fetched successfully\",\n  \"data\": [\n    {\n      \"_id\": \"665000000000000000000020\",\n      \"firstName\": \"Blocked\",\n      \"lastName\": \"Customer\",\n      \"phoneNumber\": \"+8801799999999\",\n      \"email\": \"blocked.customer@example.com\",\n      \"role\": \"User\",\n      \"status\": \"Blocked\",\n      \"createdAt\": \"2026-05-01T10:00:00.000Z\",\n      \"updatedAt\": \"2026-05-09T07:00:00.000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"stats\": {\n    \"totalUsers\": 48,\n    \"activeUsers\": 45,\n    \"blockedUsers\": 3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Saved Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "addresses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Saved Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const addresses = response?.data || [];",
+                  "if (addresses.length) {",
+                  "  const lastAddress = addresses[addresses.length - 1];",
+                  "  if (lastAddress?._id) pm.collectionVariables.set('addressId', lastAddress._id);",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"addressLine\": \"House 12, Road 7, Dhaka\",\n  \"latitude\": 23.8103,\n  \"longitude\": 90.4125,\n  \"isDefault\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "addresses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Saved Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Office\",\n  \"isDefault\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "addresses",
+                "{{addressId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Saved Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "addresses",
+                "{{addressId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const user = response?.data;",
+                  "if (user?._id) pm.collectionVariables.set('userId', user._id);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "firstName",
+                  "value": "Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "lastName",
+                  "value": "User",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "updated@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "+8801700000001",
+                  "type": "text"
+                },
+                {
+                  "key": "companyName",
+                  "value": "Updated Co",
+                  "type": "text"
+                },
+                {
+                  "key": "trnVatNo",
+                  "value": "TRN-54321",
+                  "type": "text"
+                },
+                {
+                  "key": "profileImage",
+                  "value": "",
+                  "type": "file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Rider Location",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 23.8103,\n  \"longitude\": 90.4125\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me/location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "location"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "firstName",
+                  "value": "Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "lastName",
+                  "value": "Customer",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "updated.user@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "+8801733333333",
+                  "type": "text"
+                },
+                {
+                  "key": "companyName",
+                  "value": "Updated Org",
+                  "type": "text"
+                },
+                {
+                  "key": "trnVatNo",
+                  "value": "TRN-22222",
+                  "type": "text"
+                },
+                {
+                  "key": "profileImage",
+                  "value": "",
+                  "type": "file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Admin update for users/riders. Supports status updates: User can be Approved or Blocked; Rider can be Pending, Approved, or Blocked."
+          },
+          "response": []
+        },
+        {
+          "name": "Block User By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "Blocked",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ],
+              "query": []
+            },
+            "description": "Blocks a normal user account. Blocked users cannot continue OTP login or verify OTP for tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "Unblock User By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "Approved",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ],
+              "query": []
+            },
+            "description": "Unblocks a normal user account by setting status back to Approved."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Riders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "pm.test('Rider management stats are present', function () {",
+                  "  pm.expect(response.stats).to.include.keys('totalRiders', 'activeRiders', 'pendingRiders', 'blockedRiders');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/riders?page=1&limit=20&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "riders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin-only rider management list. Response includes stats: totalRiders, activeRiders, pendingRiders, blockedRiders."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/riders?page=1&limit=20&sort=-createdAt",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "riders"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "-createdAt"
+                    }
+                  ]
+                },
+                "description": "Admin-only rider management list. Response includes stats: totalRiders, activeRiders, pendingRiders, blockedRiders."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"All riders fetched successfully\",\n  \"data\": [\n    {\n      \"_id\": \"665000000000000000000001\",\n      \"firstName\": \"Rafi\",\n      \"lastName\": \"Rider\",\n      \"phoneNumber\": \"+8801711111111\",\n      \"email\": \"rafi.rider@example.com\",\n      \"role\": \"Rider\",\n      \"status\": \"Approved\",\n      \"emaratesId\": \"784-0000-0000000-0\",\n      \"drivingLicense\": \"DL-12345\",\n      \"location\": {\n        \"latitude\": 23.7808,\n        \"longitude\": 90.2792,\n        \"updatedAt\": \"2026-05-09T06:00:00.000Z\"\n      },\n      \"createdAt\": \"2026-05-01T10:00:00.000Z\",\n      \"updatedAt\": \"2026-05-09T06:00:00.000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"stats\": {\n    \"totalRiders\": 12,\n    \"activeRiders\": 8,\n    \"pendingRiders\": 3,\n    \"blockedRiders\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Pending Riders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/riders?status=Pending&page=1&limit=20&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "riders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Pending"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin-only rider management list filtered to pending riders."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Riders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/riders?status=Approved&page=1&limit=20&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "riders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Approved"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin-only rider management list filtered to active/approved riders."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Blocked Riders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/riders?status=Blocked&page=1&limit=20&sort=-createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "riders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Blocked"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt"
+                }
+              ]
+            },
+            "description": "Admin-only rider management list filtered to blocked riders."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Riders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/riders?search={{riderSearch}}&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "riders"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{riderSearch}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Search riders by string fields such as name, phone number, email, status, and document fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Rider By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "Approved",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{riderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{riderId}}"
+              ]
+            },
+            "description": "Approves a rider and makes the rider active."
+          },
+          "response": []
+        },
+        {
+          "name": "Block Rider By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "Blocked",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{riderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{riderId}}"
+              ],
+              "query": []
+            },
+            "description": "Blocks a rider. Blocked riders cannot log in or update location."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Rider Pending By ID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{riderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{riderId}}"
+              ],
+              "query": []
+            },
+            "description": "Moves a rider back to pending approval."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get Order Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Estimate Order Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distanceKm\": 15.5,\n  \"durationMin\": 25,\n  \"vehicleType\": \"Car\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/estimate-price",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "estimate-price"
+              ]
+            },
+            "description": "Estimates order price from common delivery settings. The API converts distanceKm to miles and applies chargePerMile, plus baseDeliveryCharge and minimumDistanceMiles when configured."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"distanceKm\": 15.5,\n  \"durationMin\": 25,\n  \"vehicleType\": \"Car\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/estimate-price",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "estimate-price"
+                  ]
+                },
+                "description": "Estimates order price from common delivery settings. The API converts distanceKm to miles and applies chargePerMile, plus baseDeliveryCharge and minimumDistanceMiles when configured."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order price estimated successfully\",\n  \"data\": {\n    \"distanceKm\": 15.5,\n    \"durationMin\": 25,\n    \"vehicleType\": \"Car\",\n    \"price\": 45.5,\n    \"currency\": \"KWD\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const order = response?.data;",
+                  "if (order?._id) pm.collectionVariables.set('orderId', order._id);",
+                  "const stoppageId = order?.stoppages?.[0]?._id;",
+                  "if (stoppageId) pm.collectionVariables.set('stoppageId', stoppageId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"label\": \"Pickup Point\",\n    \"addressLine\": \"Banani, Dhaka\",\n    \"latitude\": 23.7937,\n    \"longitude\": 90.4066\n  },\n  \"dropoff\": {\n    \"label\": \"Dropoff Point\",\n    \"addressLine\": \"Dhanmondi, Dhaka\",\n    \"latitude\": 23.7465,\n    \"longitude\": 90.3760\n  },\n  \"stoppages\": [\n    {\n      \"label\": \"Stop 1\",\n      \"addressLine\": \"Mohakhali, Dhaka\",\n      \"latitude\": 23.7772,\n      \"longitude\": 90.3995\n    }\n  ],\n  \"price\": 25,\n  \"distanceKm\": 12.5,\n  \"vehicleType\": \"Bike\",\n  \"notes\": \"Handle with care\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=1&limit=20&status=Pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Orders For Rider",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders?scope=available&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "available"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const order = response?.data;",
+                  "if (order?._id) pm.collectionVariables.set('orderId', order._id);",
+                  "const stoppageId = order?.stoppages?.[0]?._id;",
+                  "if (stoppageId) pm.collectionVariables.set('stoppageId', stoppageId);",
+                  "const riderId = order?.rider?._id || order?.rider;",
+                  "if (riderId) pm.collectionVariables.set('riderId', riderId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Rider",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const order = response?.data;",
+                  "if (order?._id) pm.collectionVariables.set('orderId', order._id);",
+                  "const riderId = order?.rider?._id || order?.rider;",
+                  "if (riderId) pm.collectionVariables.set('riderId', riderId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderId\": \"{{riderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/assign-rider",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "assign-rider"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Accepted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Pickup Reached",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointType\": \"pickup\",\n  \"note\": \"Reached pickup point\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/checkpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "checkpoints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Stoppage Reached",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointType\": \"stoppage\",\n  \"stoppageId\": \"{{stoppageId}}\",\n  \"note\": \"Reached intermediate stop\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/checkpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "checkpoints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Dropoff Reached",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointType\": \"dropoff\",\n  \"note\": \"Reached final destination\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/checkpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "checkpoints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Price",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 35\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/price",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "price"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Order Review",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great delivery experience.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Tap Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{chargeId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/webhook/tap",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "webhook",
+                "tap"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const data = response?.data;",
+                  "if (data?.payment?._id) pm.collectionVariables.set('paymentId', data.payment._id);",
+                  "if (data?.chargeId) pm.collectionVariables.set('chargeId', data.chargeId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": 25,\n  \"currency\": \"AED\",\n  \"description\": \"Payment for order {{orderId}}\",\n  \"redirectUrl\": \"{{tapRedirectUrl}}\",\n  \"postUrl\": \"{{tapPostUrl}}\",\n  \"sourceId\": \"src_all\",\n  \"customer\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"{{userEmail}}\",\n    \"phoneCountryCode\": \"880\",\n    \"phoneNumber\": \"1700000000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/initiate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "initiate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Payment History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/history?page=1&limit=20&status=Captured",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "Captured"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Payment History As Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/history?userId={{userId}}&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const payment = response?.data?.payment;",
+                  "if (payment?._id) pm.collectionVariables.set('paymentId', payment._id);",
+                  "if (payment?.gatewayChargeId) pm.collectionVariables.set('chargeId', payment.gatewayChargeId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chargeId\": \"{{chargeId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "verify"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payments By Order ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const payments = response?.data || [];",
+                  "if (payments.length && payments[0]?._id) pm.collectionVariables.set('paymentId', payments[0]._id);",
+                  "if (payments.length && payments[0]?.gatewayChargeId) pm.collectionVariables.set('chargeId', payments[0].gatewayChargeId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/order/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "order",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const payment = response?.data;",
+                  "if (payment?._id) pm.collectionVariables.set('paymentId', payment._id);",
+                  "if (payment?.gatewayChargeId) pm.collectionVariables.set('chargeId', payment.gatewayChargeId);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/{{paymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "{{paymentId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Common",
+      "item": [
+        {
+          "name": "Get Common Content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/common",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Common Content",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"about\": \"About page content goes here.\",\n  \"privacyPolicy\": \"Privacy policy content goes here.\",\n  \"termsAndConditions\": \"Terms and conditions content goes here.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/common/content",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "content"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Delivery Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"baseDeliveryCharge\": 10,\n  \"chargePerMile\": 2.5,\n  \"minimumDistanceMiles\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/common/delivery-settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "common",
+                "delivery-settings"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard?groupBy=weekly&recentLimit=10&hotAreaLimit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "groupBy",
+                  "value": "weekly"
+                },
+                {
+                  "key": "recentLimit",
+                  "value": "10"
+                },
+                {
+                  "key": "hotAreaLimit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Returns the full admin dashboard. The overview object includes revenue stats: totalRevenue, thisMonthRevenue, todayRevenue, and currentPeriodRevenue.\nGrowth arrays use selected year when year is provided and return Jan-Dec month data."
+          },
+          "response": [
+            {
+              "name": "Success - Includes Revenue Stats",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/dashboard?groupBy=weekly&recentLimit=10&hotAreaLimit=5",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "dashboard"
+                  ],
+                  "query": [
+                    {
+                      "key": "groupBy",
+                      "value": "weekly"
+                    },
+                    {
+                      "key": "recentLimit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "hotAreaLimit",
+                      "value": "5"
+                    }
+                  ]
+                },
+                "description": "Returns the full admin dashboard. The overview object includes revenue stats: totalRevenue, thisMonthRevenue, todayRevenue, and currentPeriodRevenue."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Admin dashboard fetched successfully\",\n  \"data\": {\n    \"filters\": {\n      \"groupBy\": \"weekly\",\n      \"recentLimit\": 10,\n      \"hotAreaLimit\": 5,\n      \"dateFrom\": \"2026-02-15T00:00:00.000Z\",\n      \"dateTo\": \"2026-05-09T12:00:00.000Z\"\n    },\n    \"overview\": {\n      \"totalRevenue\": 45250,\n      \"thisMonthRevenue\": 8200,\n      \"todayRevenue\": 650,\n      \"currentPeriodRevenue\": 12400,\n      \"totalRiders\": 12,\n      \"totalOrders\": 320\n    },\n    \"revenueTrend\": [],\n    \"userGrowth\": [],\n    \"riderGrowth\": [],\n    \"incomeGrowth\": [],\n    \"recentOrders\": [],\n    \"earnings\": [],\n    \"hotAreas\": [],\n    \"paymentStatusBreakdown\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/overview?groupBy=daily&status=Completed&area=Banani&search=Dhaka&dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z&recentLimit=5&hotAreaLimit=3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "overview"
+              ],
+              "query": [
+                {
+                  "key": "groupBy",
+                  "value": "daily"
+                },
+                {
+                  "key": "status",
+                  "value": "Completed"
+                },
+                {
+                  "key": "area",
+                  "value": "Banani"
+                },
+                {
+                  "key": "search",
+                  "value": "Dhaka"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2026-03-01T00:00:00.000Z"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2026-03-31T23:59:59.999Z"
+                },
+                {
+                  "key": "recentLimit",
+                  "value": "5"
+                },
+                {
+                  "key": "hotAreaLimit",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": "Returns dashboard overview metrics. Revenue stats include totalRevenue (all-time paid order revenue), thisMonthRevenue, todayRevenue, and currentPeriodRevenue (date-filtered revenue)."
+          },
+          "response": [
+            {
+              "name": "Success - Revenue Stats",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/dashboard/overview?groupBy=daily&status=Completed&area=Banani&search=Dhaka&dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z&recentLimit=5&hotAreaLimit=3",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "overview"
+                  ],
+                  "query": [
+                    {
+                      "key": "groupBy",
+                      "value": "daily"
+                    },
+                    {
+                      "key": "status",
+                      "value": "Completed"
+                    },
+                    {
+                      "key": "area",
+                      "value": "Banani"
+                    },
+                    {
+                      "key": "search",
+                      "value": "Dhaka"
+                    },
+                    {
+                      "key": "dateFrom",
+                      "value": "2026-03-01T00:00:00.000Z"
+                    },
+                    {
+                      "key": "dateTo",
+                      "value": "2026-03-31T23:59:59.999Z"
+                    },
+                    {
+                      "key": "recentLimit",
+                      "value": "5"
+                    },
+                    {
+                      "key": "hotAreaLimit",
+                      "value": "3"
+                    }
+                  ]
+                },
+                "description": "Returns dashboard overview metrics. Revenue stats include totalRevenue (all-time paid order revenue), thisMonthRevenue, todayRevenue, and currentPeriodRevenue (date-filtered revenue)."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Dashboard overview fetched successfully\",\n  \"data\": {\n    \"totalUsers\": 150,\n    \"totalRiders\": 12,\n    \"totalOrders\": 320,\n    \"totalEarning\": 45250,\n    \"totalRevenue\": 45250,\n    \"thisMonthRevenue\": 8200,\n    \"todayRevenue\": 650,\n    \"currentPeriodRevenue\": 3100,\n    \"activeDrivers\": 8,\n    \"avgOrdersPerArea\": 12.8,\n    \"activeUsersCurrentPeriod\": 42,\n    \"activeOrdersCurrentPeriod\": 14,\n    \"completedOrdersCurrentPeriod\": 55,\n    \"cancelledOrdersCurrentPeriod\": 4,\n    \"paidOrdersCurrentPeriod\": 51,\n    \"averageOrderValue\": 141.41\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Revenue Trend",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/revenue-trend?year=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "revenue-trend"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            },
+            "description": "Year-only monthly revenue trend from paid orders. Returns Jan-Dec with zero-filled months."
+          },
+          "response": [
+            {
+              "name": "Success - Monthly Year Data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/dashboard/revenue-trend?year=2026",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "revenue-trend"
+                  ],
+                  "query": [
+                    {
+                      "key": "year",
+                      "value": "2026"
+                    }
+                  ]
+                },
+                "description": "Year-only monthly revenue trend from paid orders. Returns Jan-Dec with zero-filled months."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Revenue trend fetched successfully\",\n  \"data\": [\n    {\n      \"month\": \"Jan\",\n      \"revenue\": 1200\n    },\n    {\n      \"month\": \"Feb\",\n      \"revenue\": 1450\n    },\n    {\n      \"month\": \"Mar\",\n      \"revenue\": 1300\n    },\n    {\n      \"month\": \"Apr\",\n      \"revenue\": 1800\n    },\n    {\n      \"month\": \"May\",\n      \"revenue\": 2100\n    },\n    {\n      \"month\": \"Jun\",\n      \"revenue\": 1950\n    },\n    {\n      \"month\": \"Jul\",\n      \"revenue\": 2400\n    },\n    {\n      \"month\": \"Aug\",\n      \"revenue\": 2750\n    },\n    {\n      \"month\": \"Sep\",\n      \"revenue\": 2600\n    },\n    {\n      \"month\": \"Oct\",\n      \"revenue\": 3000\n    },\n    {\n      \"month\": \"Nov\",\n      \"revenue\": 3300\n    },\n    {\n      \"month\": \"Dec\",\n      \"revenue\": 3800\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get User Growth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/user-growth?year=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "user-growth"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            },
+            "description": "Year-only monthly user growth. Returns Jan-Dec with zero-filled months."
+          },
+          "response": [
+            {
+              "name": "Success - Monthly Year Data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/dashboard/user-growth?year=2026",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "user-growth"
+                  ],
+                  "query": [
+                    {
+                      "key": "year",
+                      "value": "2026"
+                    }
+                  ]
+                },
+                "description": "Year-only monthly user growth. Returns Jan-Dec with zero-filled months."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User growth fetched successfully\",\n  \"data\": [\n    {\n      \"month\": \"Jan\",\n      \"users\": 120\n    },\n    {\n      \"month\": \"Feb\",\n      \"users\": 145\n    },\n    {\n      \"month\": \"Mar\",\n      \"users\": 130\n    },\n    {\n      \"month\": \"Apr\",\n      \"users\": 180\n    },\n    {\n      \"month\": \"May\",\n      \"users\": 210\n    },\n    {\n      \"month\": \"Jun\",\n      \"users\": 195\n    },\n    {\n      \"month\": \"Jul\",\n      \"users\": 240\n    },\n    {\n      \"month\": \"Aug\",\n      \"users\": 275\n    },\n    {\n      \"month\": \"Sep\",\n      \"users\": 260\n    },\n    {\n      \"month\": \"Oct\",\n      \"users\": 300\n    },\n    {\n      \"month\": \"Nov\",\n      \"users\": 330\n    },\n    {\n      \"month\": \"Dec\",\n      \"users\": 380\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Rider Growth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/rider-growth?year=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "rider-growth"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            },
+            "description": "Year-only monthly rider growth. Returns Jan-Dec with zero-filled months."
+          },
+          "response": [
+            {
+              "name": "Success - Monthly Year Data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/dashboard/rider-growth?year=2026",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "rider-growth"
+                  ],
+                  "query": [
+                    {
+                      "key": "year",
+                      "value": "2026"
+                    }
+                  ]
+                },
+                "description": "Year-only monthly rider growth. Returns Jan-Dec with zero-filled months."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Rider growth fetched successfully\",\n  \"data\": [\n    {\n      \"month\": \"Jan\",\n      \"riders\": 120\n    },\n    {\n      \"month\": \"Feb\",\n      \"riders\": 145\n    },\n    {\n      \"month\": \"Mar\",\n      \"riders\": 130\n    },\n    {\n      \"month\": \"Apr\",\n      \"riders\": 180\n    },\n    {\n      \"month\": \"May\",\n      \"riders\": 210\n    },\n    {\n      \"month\": \"Jun\",\n      \"riders\": 195\n    },\n    {\n      \"month\": \"Jul\",\n      \"riders\": 240\n    },\n    {\n      \"month\": \"Aug\",\n      \"riders\": 275\n    },\n    {\n      \"month\": \"Sep\",\n      \"riders\": 260\n    },\n    {\n      \"month\": \"Oct\",\n      \"riders\": 300\n    },\n    {\n      \"month\": \"Nov\",\n      \"riders\": 330\n    },\n    {\n      \"month\": \"Dec\",\n      \"riders\": 380\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Income Growth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/income-growth?year=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "income-growth"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            },
+            "description": "Payment income growth endpoint. For frontend monthly earning chart, use Get Revenue Trend with ?year=YYYY."
+          },
+          "response": [
+            {
+              "name": "Success - Monthly Year Data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/dashboard/income-growth?year=2026",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "income-growth"
+                  ],
+                  "query": [
+                    {
+                      "key": "year",
+                      "value": "2026"
+                    }
+                  ]
+                },
+                "description": "Year-only monthly earning growth from captured payments. Returns Jan-Dec with zero-filled months."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Income growth fetched successfully\",\n  \"data\": [\n    {\n      \"month\": \"Jan\",\n      \"earnings\": 1200\n    },\n    {\n      \"month\": \"Feb\",\n      \"earnings\": 1450\n    },\n    {\n      \"month\": \"Mar\",\n      \"earnings\": 1300\n    },\n    {\n      \"month\": \"Apr\",\n      \"earnings\": 1800\n    },\n    {\n      \"month\": \"May\",\n      \"earnings\": 2100\n    },\n    {\n      \"month\": \"Jun\",\n      \"earnings\": 1950\n    },\n    {\n      \"month\": \"Jul\",\n      \"earnings\": 2400\n    },\n    {\n      \"month\": \"Aug\",\n      \"earnings\": 2750\n    },\n    {\n      \"month\": \"Sep\",\n      \"earnings\": 2600\n    },\n    {\n      \"month\": \"Oct\",\n      \"earnings\": 3000\n    },\n    {\n      \"month\": \"Nov\",\n      \"earnings\": 3300\n    },\n    {\n      \"month\": \"Dec\",\n      \"earnings\": 3800\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Recent Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/recent-orders?status=Completed&area=Banani&search=Dhaka&recentLimit=5&dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "recent-orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Completed"
+                },
+                {
+                  "key": "area",
+                  "value": "Banani"
+                },
+                {
+                  "key": "search",
+                  "value": "Dhaka"
+                },
+                {
+                  "key": "recentLimit",
+                  "value": "5"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2026-03-01T00:00:00.000Z"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2026-03-31T23:59:59.999Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Earnings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/earnings?recentLimit=5&dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "earnings"
+              ],
+              "query": [
+                {
+                  "key": "recentLimit",
+                  "value": "5"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2026-03-01T00:00:00.000Z"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2026-03-31T23:59:59.999Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hot Areas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/hot-areas?status=Completed&hotAreaLimit=3&dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "hot-areas"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Completed"
+                },
+                {
+                  "key": "hotAreaLimit",
+                  "value": "3"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2026-03-01T00:00:00.000Z"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2026-03-31T23:59:59.999Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Status Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/payment-status-breakdown?dateFrom=2026-03-01T00:00:00.000Z&dateTo=2026-03-31T23:59:59.999Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "payment-status-breakdown"
+              ],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2026-03-01T00:00:00.000Z"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2026-03-31T23:59:59.999Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Create Report As User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const report = response?.data;",
+                  "if (report?._id) pm.collectionVariables.set('reportId', report._id);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Payment issue\",\n  \"description\": \"Payment was deducted twice.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Report As Rider",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const report = response?.data;",
+                  "if (report?._id) pm.collectionVariables.set('reportId', report._id);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"App issue\",\n  \"description\": \"Unable to see assigned orders on rider app.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Reports As User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports?page=1&limit=20&status=Pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Reports As Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports?page=1&limit=20&status=Pending&reporterRole=User&search=payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending"
+                },
+                {
+                  "key": "reporterRole",
+                  "value": "User"
+                },
+                {
+                  "key": "search",
+                  "value": "payment"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Report By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const report = response?.data;",
+                  "if (report?._id) pm.collectionVariables.set('reportId', report._id);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "{{reportId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolutionNote\": \"Issue reviewed and resolved by support team.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "{{reportId}}",
+                "resolve"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "const notifications = response?.data || [];",
+                  "if (notifications.length && notifications[0]?._id) pm.collectionVariables.set('notificationId', notifications[0]._id);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('authToken') && pm.collectionVariables.get('adminToken')) {",
+          "  pm.collectionVariables.set('authToken', pm.collectionVariables.get('adminToken'));",
+          "}",
+          "if (!pm.collectionVariables.get('authToken') && pm.collectionVariables.get('userToken')) {",
+          "  pm.collectionVariables.set('authToken', pm.collectionVariables.get('userToken'));",
+          "}",
+          "if (!pm.collectionVariables.get('userId') && pm.collectionVariables.get('createdUserId')) {",
+          "  pm.collectionVariables.set('userId', pm.collectionVariables.get('createdUserId'));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "serverUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "firebaseIdToken",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "addressId",
+      "value": ""
+    },
+    {
+      "key": "riderId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "stoppageId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "reportId",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "chargeId",
+      "value": ""
+    },
+    {
+      "key": "tapPostUrl",
+      "value": "https://gogo-backend-agsd.onrender.com/api/v1/payments/webhook/tap"
+    },
+    {
+      "key": "tapRedirectUrl",
+      "value": "gogo://payment/callback"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "userToken",
+      "value": ""
+    },
+    {
+      "key": "riderToken",
+      "value": ""
+    },
+    {
+      "key": "adminUserId",
+      "value": ""
+    },
+    {
+      "key": "adminPhoneNumber",
+      "value": "+8801700000001"
+    },
+    {
+      "key": "adminEmail",
+      "value": "mdshahamanpatwary@gmail.com"
+    },
+    {
+      "key": "userPhoneNumber",
+      "value": "+8801700000000"
+    },
+    {
+      "key": "userEmail",
+      "value": "john@example.com"
+    },
+    {
+      "key": "riderPhoneNumber",
+      "value": "+8801711111111"
+    },
+    {
+      "key": "riderEmail",
+      "value": "rafi.rider@example.com"
+    },
+    {
+      "key": "createdUserId",
+      "value": ""
+    },
+    {
+      "key": "createdUserPhoneNumber",
+      "value": "+8801722222222"
+    },
+    {
+      "key": "createdUserEmail",
+      "value": "created.user@example.com"
+    },
+    {
+      "key": "adminPassword",
+      "value": "123456"
+    },
+    {
+      "key": "adminResetOtp",
+      "value": ""
+    },
+    {
+      "key": "adminNewPassword",
+      "value": "newAdminPassword123"
+    },
+    {
+      "key": "riderSearch",
+      "value": ""
+    },
+    {
+      "key": "blockedUserId",
+      "value": ""
+    }
+  ]
+}
