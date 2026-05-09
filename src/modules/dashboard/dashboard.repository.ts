@@ -5,6 +5,7 @@ import User from "../user/user.model";
 type DashboardFilters = {
   dateFrom: Date;
   dateTo: Date;
+  year?: number;
   status?: string;
   area?: string;
   search?: string;
@@ -12,6 +13,21 @@ type DashboardFilters = {
   hotAreaLimit: number;
   groupBy: "daily" | "weekly" | "monthly" | "yearly";
 };
+
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 export class DashboardRepository {
   private buildOrderAttributeMatch(filters: DashboardFilters) {
@@ -106,6 +122,20 @@ export class DashboardRepository {
       },
     };
   }
+
+  private buildMonthlySeries = (
+    results: Array<{ month: number; value: number }>,
+    valueKey: string
+  ) => {
+    const valuesByMonth = new Map(
+      results.map((item) => [item.month, Number(item.value || 0)])
+    );
+
+    return MONTH_LABELS.map((month, index) => ({
+      month,
+      [valueKey]: valuesByMonth.get(index + 1) || 0,
+    }));
+  };
 
   private getCurrentRevenueRanges() {
     const now = new Date();
@@ -301,7 +331,7 @@ export class DashboardRepository {
   };
 
   getUserGrowth = async (filters: DashboardFilters) => {
-    return User.aggregate([
+    const results = await User.aggregate([
       {
         $match: {
           ...this.buildCreatedAtMatch(filters),
@@ -310,23 +340,25 @@ export class DashboardRepository {
       },
       {
         $group: {
-          _id: this.buildPeriodExpression(filters.groupBy),
-          totalUsers: { $sum: 1 },
+          _id: { $month: "$createdAt" },
+          users: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
       {
         $project: {
           _id: 0,
-          period: "$_id",
-          totalUsers: 1,
+          month: "$_id",
+          value: "$users",
         },
       },
     ]);
+
+    return this.buildMonthlySeries(results, "users");
   };
 
   getRiderGrowth = async (filters: DashboardFilters) => {
-    return User.aggregate([
+    const results = await User.aggregate([
       {
         $match: {
           ...this.buildCreatedAtMatch(filters),
@@ -335,23 +367,25 @@ export class DashboardRepository {
       },
       {
         $group: {
-          _id: this.buildPeriodExpression(filters.groupBy),
-          totalRiders: { $sum: 1 },
+          _id: { $month: "$createdAt" },
+          riders: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
       {
         $project: {
           _id: 0,
-          period: "$_id",
-          totalRiders: 1,
+          month: "$_id",
+          value: "$riders",
         },
       },
     ]);
+
+    return this.buildMonthlySeries(results, "riders");
   };
 
   getIncomeGrowth = async (filters: DashboardFilters) => {
-    return Payment.aggregate([
+    const results = await Payment.aggregate([
       {
         $match: {
           ...this.buildCreatedAtMatch(filters),
@@ -360,21 +394,21 @@ export class DashboardRepository {
       },
       {
         $group: {
-          _id: this.buildPeriodExpression(filters.groupBy),
-          totalIncome: { $sum: "$amount" },
-          totalTransactions: { $sum: 1 },
+          _id: { $month: "$createdAt" },
+          earnings: { $sum: "$amount" },
         },
       },
       { $sort: { _id: 1 } },
       {
         $project: {
           _id: 0,
-          period: "$_id",
-          totalIncome: 1,
-          totalTransactions: 1,
+          month: "$_id",
+          value: "$earnings",
         },
       },
     ]);
+
+    return this.buildMonthlySeries(results, "earnings");
   };
 
   getRecentOrders = async (filters: DashboardFilters) => {

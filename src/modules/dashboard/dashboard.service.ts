@@ -7,6 +7,13 @@ export class DashboardService {
   constructor(private dashboardRepository: DashboardRepository) {}
 
   private getDateRange(query: DashboardQuery) {
+    if (query.year) {
+      return {
+        dateFrom: new Date(query.year, 0, 1, 0, 0, 0, 0),
+        dateTo: new Date(query.year, 11, 31, 23, 59, 59, 999),
+      };
+    }
+
     if (query.dateFrom || query.dateTo) {
       return {
         dateFrom: query.dateFrom ? new Date(query.dateFrom) : new Date(0),

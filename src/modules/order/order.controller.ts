@@ -24,6 +24,18 @@ export class OrderController {
     }
   );
 
+  estimatePrice = asyncHandler(
+    async (req: Request, res: Response, _next: NextFunction) => {
+      const estimate = await this.orderService.estimatePrice(req.body);
+
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Order price estimated successfully",
+        data: estimate,
+      });
+    }
+  );
+
   getAllOrders = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
       if (!req.user) {

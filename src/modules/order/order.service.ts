@@ -3,8 +3,11 @@ import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
 import { OrderRepository } from "./order.repository";
 import { UserRepository } from "../user/user.repository";
+import { CommonRepository } from "../common/common.repository";
 
 const REFERRAL_FIRST_ORDER_DISCOUNT = 10;
+const KM_TO_MILES = 0.621371;
+const ORDER_PRICE_CURRENCY = "KWD";
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   Pending: ["Accepted", "Cancelled"],
@@ -18,7 +21,8 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 export class OrderService {
   constructor(
     private orderRepo: OrderRepository,
-    private userRepo: UserRepository
+    private userRepo: UserRepository,
+    private commonRepo: CommonRepository
   ) {}
 
   private getActorId = (actor: any) =>
@@ -97,6 +101,35 @@ export class OrderService {
     }
 
     return this.orderRepo.getOrderById(String(order._id));
+  };
+
+  estimatePrice = async (payload: {
+    distanceKm: number;
+    durationMin: number;
+    vehicleType: "Bike" | "Car" | "Truck";
+  }) => {
+    const common = await this.commonRepo.getContent();
+    const deliverySettings = (common?.deliverySettings || {}) as {
+      baseDeliveryCharge?: number;
+      chargePerMile?: number;
+      minimumDistanceMiles?: number;
+    };
+    const distanceMiles = payload.distanceKm * KM_TO_MILES;
+    const billableDistanceMiles = Math.max(
+      distanceMiles,
+      deliverySettings.minimumDistanceMiles || 0
+    );
+    const price =
+      (deliverySettings.baseDeliveryCharge || 0) +
+      billableDistanceMiles * (deliverySettings.chargePerMile || 0);
+
+    return {
+      distanceKm: payload.distanceKm,
+      durationMin: payload.durationMin,
+      vehicleType: payload.vehicleType,
+      price: Number(price.toFixed(2)),
+      currency: ORDER_PRICE_CURRENCY,
+    };
   };
 
   getAllOrders = async (currentUser: any, query: any) => {
