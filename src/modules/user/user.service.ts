@@ -11,6 +11,10 @@ import {
 export class UserService {
   constructor(private userRepo: UserRepository) {}
 
+  private normalizeStatus(status: string) {
+    return status === "Approved" ? "Active" : status;
+  }
+
   createUser = async (userBody: createUserType) => {
     const existingUser = await this.userRepo.findUserByEmail(userBody.email);
 
@@ -96,7 +100,7 @@ export class UserService {
       throw new apiError(Errors.Forbidden.code, "Only riders can update location");
     }
 
-    if (user.status !== "Approved") {
+    if (user.status !== "Active") {
       const message =
         user.status === "Blocked"
           ? "Rider account is blocked"
@@ -124,13 +128,15 @@ export class UserService {
         throw new apiError(400, "Admin account status cannot be updated here");
       }
 
-      if (!["Pending", "Approved", "Blocked"].includes(body.status)) {
+      if (!["Pending", "Approved", "Active", "Blocked"].includes(body.status)) {
         throw new apiError(400, "Invalid user status");
       }
 
       if (existingUser.role === "User" && body.status === "Pending") {
         throw new apiError(400, "Pending status is only valid for rider accounts");
       }
+
+      body.status = this.normalizeStatus(body.status);
     }
 
     return await this.userRepo.updateUser(id, body)

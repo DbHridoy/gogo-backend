@@ -60,7 +60,7 @@ export class UserRepository {
           totalUsers: { $sum: 1 },
           activeUsers: {
             $sum: {
-              $cond: [{ $eq: ["$status", "Approved"] }, 1, 0],
+              $cond: [{ $eq: ["$status", "Active"] }, 1, 0],
             },
           },
           blockedUsers: {
@@ -119,7 +119,7 @@ export class UserRepository {
           totalRiders: { $sum: 1 },
           activeRiders: {
             $sum: {
-              $cond: [{ $eq: ["$status", "Approved"] }, 1, 0],
+              $cond: [{ $eq: ["$status", "Active"] }, 1, 0],
             },
           },
           pendingRiders: {
