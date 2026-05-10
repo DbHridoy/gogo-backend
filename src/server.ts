@@ -13,7 +13,7 @@ const startServer = async () => {
     await connectDB(env.DB_URL);
     const server = createServer(app);
     initSocket(server);
-    server.listen(env.PORT,'127.0.0.1', () => {
+    server.listen(env.PORT, () => {
       logger.info(
         `Server is running on port http://localhost:${env.PORT}/api/v1`,
       );
