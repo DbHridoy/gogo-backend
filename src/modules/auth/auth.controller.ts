@@ -27,7 +27,7 @@ export class AuthController {
     async (req: Request, res: Response, next: NextFunction) => {
       const body = req.body;
       logger.info(body, "Login body");
-      const user = await this.authService.loginUser(body.email, body.password);
+      const user = await this.authService.loginUser(body.email, body.password, body.phoneNumber);
       const { password, ...safeUser } = user.user;
 
       const data = {
@@ -51,6 +51,32 @@ export class AuthController {
         message: "Login successful",
         data,
       });
+    }
+  );
+
+  checkUser = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { phoneNumber } = req.body;
+      if (!phoneNumber) {
+        return res.status(HttpCodes.BadRequest).json({
+          success: false,
+          message: "phoneNumber is required",
+        });
+      }
+      const result = await this.authService.checkUserByPhone(phoneNumber);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        data: result,
+      });
+    }
+  );
+
+  changePassword = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const user = req.user!;
+      const { currentPassword, newPassword } = req.body;
+      const result = await this.authService.changePassword(user.userId, currentPassword, newPassword);
+      res.status(HttpCodes.Ok).json(result);
     }
   );
 

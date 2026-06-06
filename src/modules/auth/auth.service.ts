@@ -13,7 +13,7 @@ export class AuthService {
 
   constructor(private authRepo: AuthRepository,private userRepo:UserRepository,private hashUtils:HashUtils,private jwtUtils:JwtUtils,private mailerUtils:Mailer) {}
 
-  register = async (userBody: createUserType) => {
+  register = async (userBody: any) => {
     const existingUser = await this.userRepo.findUserByEmail(userBody.email);
 
     if (existingUser) {
@@ -22,40 +22,64 @@ export class AuthService {
         Errors.AlreadyExists.message
       );
     }
-    const hashedPassword = await this.hashUtils.hashPassword(userBody.password);
-    logger.info({ hashedPassword }, "HashedPassword");
+
+    if (userBody.phoneNumber) {
+      const existingPhone = await this.userRepo.findUserByPhone(userBody.phoneNumber);
+      if (existingPhone) {
+        throw new apiError(
+          Errors.AlreadyExists.code,
+          "Phone number already registered"
+        );
+      }
+    }
+
+    let hashedPassword;
+    if (userBody.password) {
+      hashedPassword = await this.hashUtils.hashPassword(userBody.password);
+    }
+
+    const name = userBody.fullName || `${userBody.firstName || ""} ${userBody.lastName || ""}`.trim();
 
     const user = {
       ...userBody,
+      name,
       password: hashedPassword,
     };
 
     logger.info({ user }, "user");
 
     const newUser = await this.userRepo.createUser(user);
-
-    console.log("+++++++++++++++++++++++++++++++++++++++++");
-    console.log(newUser);
-    console.log("+++++++++++++++++++++++++++++++++++++++++");
     return newUser;
   };
 
-  loginUser = async (email: string, password: string) => {
-    const user = await this.userRepo.findUserByEmail(email);
-    logger.info({ user }, "Authservice.loginUser line:45");
-    if (!user) {
-      throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
-    }
+  loginUser = async (email?: string, password?: string, phoneNumber?: string) => {
+    let user;
+    if (phoneNumber) {
+      user = await this.userRepo.findUserByPhone(phoneNumber);
+      if (!user) {
+        throw new apiError(Errors.NotFound.code, "User not found with this phone number");
+      }
+    } else if (email && password) {
+      user = await this.userRepo.findUserByEmail(email);
+      if (!user) {
+        throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      }
 
-    const isVerified = bcrypt.compareSync(password, user.password);
-    // logger.info({isVerified}, "Authservice.loginUser line:51");
-    if (!isVerified) {
-      throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      if (!user.password) {
+        throw new apiError(Errors.Unauthorized.code, "Password not set for this account. Please log in using Phone OTP.");
+      }
+
+      const isVerified = bcrypt.compareSync(password, user.password);
+      if (!isVerified) {
+        throw new apiError(Errors.Unauthorized.code, Errors.Unauthorized.message);
+      }
+    } else {
+      throw new apiError(Errors.BadRequest.code, "Authentication fields missing");
     }
 
     const payload = {
       userId: user._id,
-      fullName: user.fullName,
+      fullName: user.fullName || user.name,
       email: user.email,
       role: user.role,
     };
@@ -73,6 +97,29 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  };
+
+  checkUserByPhone = async (phoneNumber: string) => {
+    const user = await this.userRepo.findUserByPhone(phoneNumber);
+    return { exists: !!user };
+  };
+
+  changePassword = async (userId: string, currentPassword?: string, newPassword?: string) => {
+    const user = await this.userRepo.findUserById(userId);
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, "User not found");
+    }
+
+    if (user.password && currentPassword) {
+      const isVerified = bcrypt.compareSync(currentPassword, user.password);
+      if (!isVerified) {
+        throw new apiError(Errors.Unauthorized.code, "Incorrect current password");
+      }
+    }
+
+    const hashedPassword = await this.hashUtils.hashPassword(newPassword!);
+    await this.userRepo.updateUserPassword(user._id, hashedPassword);
+    return { success: true, message: "Password updated successfully" };
   };
 
   async sendOtp(email: string) {

@@ -11,6 +11,7 @@ import {
   TypedRequestBodyWithFile,
 } from "../../types/request.type";
 import { createUserType } from "./user.type";
+import { uploadToS3 } from "../../utils/s3-upload";
 
 export class UserController {
   constructor(private userService: UserService) { }
@@ -135,6 +136,98 @@ export class UserController {
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "Profile updated successfully",
+        data: updatedUser,
+      });
+    }
+  );
+
+  updateLocation = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const { latitude, longitude } = req.body;
+      const updatedUser = await this.userService.updateLocation(userId, latitude, longitude);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Location updated successfully",
+        data: updatedUser,
+      });
+    }
+  );
+
+  updateDriverDocuments = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const docs: any = {};
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      if (files) {
+        if (files.emaratesId?.[0]) {
+          docs.emaratesId = await uploadToS3(files.emaratesId[0].buffer, `uploads/${files.emaratesId[0].originalname}`, files.emaratesId[0].mimetype);
+        }
+        if (files.drivingLicense?.[0]) {
+          docs.drivingLicense = await uploadToS3(files.drivingLicense[0].buffer, `uploads/${files.drivingLicense[0].originalname}`, files.drivingLicense[0].mimetype);
+        }
+        if (files.vehicleRegistration?.[0]) {
+          docs.vehicleRegistration = await uploadToS3(files.vehicleRegistration[0].buffer, `uploads/${files.vehicleRegistration[0].originalname}`, files.vehicleRegistration[0].mimetype);
+        }
+      }
+      
+      const updatedUser = await this.userService.updateDriverDocuments(userId, docs);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Driver documents updated successfully",
+        data: updatedUser,
+      });
+    }
+  );
+
+  getAddresses = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const addresses = await this.userService.getAddresses(userId);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Saved addresses fetched successfully",
+        data: addresses,
+      });
+    }
+  );
+
+  addAddress = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const address = req.body;
+      const updatedUser = await this.userService.addAddress(userId, address);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Address added successfully",
+        data: updatedUser,
+      });
+    }
+  );
+
+  updateAddress = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const { addressId } = req.params;
+      const addressBody = req.body;
+      const updatedUser = await this.userService.updateAddress(userId, addressId, addressBody);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Address updated successfully",
+        data: updatedUser,
+      });
+    }
+  );
+
+  deleteAddress = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const { addressId } = req.params;
+      const updatedUser = await this.userService.deleteAddress(userId, addressId);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Address deleted successfully",
         data: updatedUser,
       });
     }

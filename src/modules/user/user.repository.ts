@@ -21,6 +21,10 @@ export class UserRepository {
     return user;
   };
 
+  findUserByPhone = async (phoneNumber: string) => {
+    return await User.findOne({ phoneNumber }).lean();
+  };
+
   createUser = async (userBody: any) => {
     logger.info({ userBody }, "UserRepository - createUser");
 
@@ -68,5 +72,63 @@ export class UserRepository {
 
   deleteUser = async (id: string) => {
     return await User.findByIdAndDelete(id);
+  };
+
+  updateLocation = async (id: string, latitude: number, longitude: number) => {
+    return await User.findByIdAndUpdate(
+      id,
+      {
+        location: {
+          latitude,
+          longitude,
+          updatedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+  };
+
+  updateDriverDocuments = async (
+    id: string,
+    docs: { emaratesId?: string; drivingLicense?: string; vehicleRegistration?: string }
+  ) => {
+    return await User.findByIdAndUpdate(
+      id,
+      { $set: docs },
+      { new: true }
+    );
+  };
+
+  getAddresses = async (id: string) => {
+    const user = await User.findById(id).select("addresses");
+    return user?.addresses || [];
+  };
+
+  addAddress = async (id: string, address: any) => {
+    return await User.findByIdAndUpdate(
+      id,
+      { $push: { addresses: address } },
+      { new: true }
+    );
+  };
+
+  updateAddress = async (userId: string, addressId: string, addressBody: any) => {
+    const updateObj: any = {};
+    for (const key of Object.keys(addressBody)) {
+      updateObj[`addresses.$.${key}`] = addressBody[key];
+    }
+    return await User.findOneAndUpdate(
+      { _id: userId, "addresses._id": addressId },
+      { $set: updateObj },
+      { new: true }
+    );
+  };
+
+  deleteAddress = async (userId: string, addressId: string) => {
+    return await User.findByIdAndUpdate(
+      userId,
+      { $pull: { addresses: { _id: addressId } } },
+      { new: true }
+    );
   };
 }

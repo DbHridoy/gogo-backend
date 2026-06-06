@@ -62,5 +62,29 @@ export class UserService {
   // }
   deleteUser = async (id: string) => {
     return await this.userRepo.deleteUser(id)
-  }
+  };
+
+  updateLocation = async (id: string, latitude: number, longitude: number) => {
+    return await this.userRepo.updateLocation(id, latitude, longitude);
+  };
+
+  updateDriverDocuments = async (id: string, docs: any) => {
+    return await this.userRepo.updateDriverDocuments(id, docs);
+  };
+
+  getAddresses = async (id: string) => {
+    return await this.userRepo.getAddresses(id);
+  };
+
+  addAddress = async (id: string, address: any) => {
+    return await this.userRepo.addAddress(id, address);
+  };
+
+  updateAddress = async (userId: string, addressId: string, addressBody: any) => {
+    return await this.userRepo.updateAddress(userId, addressId, addressBody);
+  };
+
+  deleteAddress = async (userId: string, addressId: string) => {
+    return await this.userRepo.deleteAddress(userId, addressId);
+  };
 }

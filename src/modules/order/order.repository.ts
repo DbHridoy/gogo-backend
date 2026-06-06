@@ -1,0 +1,83 @@
+import { Types } from "mongoose";
+import Order from "./order.model";
+
+export class OrderRepository {
+  createOrder = async (orderData: any) => {
+    const order = new Order(orderData);
+    await order.save();
+    return order;
+  };
+
+  getOrderById = async (id: string) => {
+    return await Order.findById(id).populate("user rider").lean();
+  };
+
+  getOrders = async (query: { userId?: string; riderId?: string; status?: string; scope?: string; page?: number; limit?: number }) => {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    if (query.status) {
+      filter.status = query.status;
+    }
+
+    if (query.scope === "available") {
+      filter.status = "Pending";
+      filter.rider = { $exists: false };
+    } else if (query.riderId) {
+      filter.rider = query.riderId;
+    } else if (query.userId) {
+      filter.user = query.userId;
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate("user rider")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Order.countDocuments(filter),
+    ]);
+
+    return { data: orders, total };
+  };
+
+  updateOrderStatus = async (id: string, status: string) => {
+    return await Order.findByIdAndUpdate(id, { status }, { new: true });
+  };
+
+  assignRider = async (id: string, riderId: string) => {
+    return await Order.findByIdAndUpdate(
+      id,
+      { rider: riderId, status: "Accepted" },
+      { new: true }
+    );
+  };
+
+  addCheckpoint = async (id: string, checkpoint: any) => {
+    return await Order.findByIdAndUpdate(
+      id,
+      { $push: { checkpoints: checkpoint } },
+      { new: true }
+    );
+  };
+
+  addReview = async (id: string, review: { rating: number; comment?: string }) => {
+    return await Order.findByIdAndUpdate(id, { review }, { new: true });
+  };
+
+  cancelOrder = async (id: string, reason?: string) => {
+    return await Order.findByIdAndUpdate(
+      id,
+      { status: "Cancelled", cancellationReason: reason },
+      { new: true }
+    );
+  };
+
+  setCompletionProof = async (id: string, completionProof: string) => {
+    return await Order.findByIdAndUpdate(id, { completionProof }, { new: true });
+  };
+}

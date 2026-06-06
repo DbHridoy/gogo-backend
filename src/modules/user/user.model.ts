@@ -1,10 +1,30 @@
 import { Schema, model } from "mongoose";
 
+const addressSchema = new Schema({
+  label: String,
+  addressLine: String,
+  latitude: Number,
+  longitude: Number,
+});
+
 const userSchema = new Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
+    },
+    firstName: {
+      type: String,
+      required: false,
+    },
+    lastName: {
+      type: String,
+      required: false,
+    },
+    phoneNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     email: {
       type: String,
@@ -19,8 +39,20 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
+    companyName: String,
+    trnVatNo: String,
+    emaratesId: String,
+    drivingLicense: String,
+    vehicleRegistration: String,
+    referralCode: String,
+    location: {
+      latitude: Number,
+      longitude: Number,
+      updatedAt: Date,
+    },
+    addresses: [addressSchema],
   },
   {
     timestamps: true,
@@ -28,6 +60,13 @@ const userSchema = new Schema(
     toObject: { virtuals: true },
   }
 );
+
+userSchema.virtual("fullName").get(function (this: any) {
+  if (this.firstName || this.lastName) {
+    return `${this.firstName || ""} ${this.lastName || ""}`.trim();
+  }
+  return this.name;
+});
 
 const User = model("User", userSchema);
 

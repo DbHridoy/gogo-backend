@@ -12,6 +12,13 @@ import { AuthRepository } from "./modules/auth/auth.repository";
 import { AuthService } from "./modules/auth/auth.service";
 import { AuthController } from "./modules/auth/auth.controller";
 import { buildDynamicSearch } from "./utils/dynamic-search-utils";
+import { OrderRepository } from "./modules/order/order.repository";
+import { OrderService } from "./modules/order/order.service";
+import { OrderController } from "./modules/order/order.controller";
+import { PaymentService } from "./modules/payment/payment.service";
+import { PaymentController } from "./modules/payment/payment.controller";
+import { DashboardService } from "./modules/dashboard/dashboard.service";
+import { DashboardController } from "./modules/dashboard/dashboard.controller";
 
 export const hashUtils = new HashUtils();
 export const jwtUtils = new JwtUtils();
@@ -36,3 +43,13 @@ export const authController = new AuthController(authService);
 
 export const commonService = new CommonService(commonRepository);
 export const commonController = new CommonController(commonService, commonRepository);
+
+export const orderRepository = new OrderRepository();
+export const orderService = new OrderService(orderRepository);
+export const orderController = new OrderController(orderService);
+
+export const paymentService = new PaymentService();
+export const paymentController = new PaymentController(paymentService);
+
+export const dashboardService = new DashboardService();
+export const dashboardController = new DashboardController(dashboardService);
