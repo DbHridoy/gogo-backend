@@ -21,6 +21,15 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    emaratesId: {
+      type: String,
+    },
+    drivingLicense: {
+      type: String,
+    },
+    vehicleRegistration: {
+      type: String,
+    },
   },
   {
     timestamps: true,
