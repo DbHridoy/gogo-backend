@@ -60,18 +60,30 @@ export class OrderRepository {
       completed: 0,
       cancelled: 0,
       inProgress: 0,
-      accepted: 0
+      accepted: 0,
+      totalOrders: 0,
+      completedOrders: 0,
+      pendingOrders: 0
     };
 
+    let total = 0;
     summary.forEach((item) => {
       const status = item._id.toLowerCase();
-      if (status === "pending") result.pending = item.count;
-      else if (status === "completed") result.completed = item.count;
+      total += item.count;
+      if (status === "pending") {
+        result.pending = item.count;
+        result.pendingOrders = item.count;
+      }
+      else if (status === "completed") {
+        result.completed = item.count;
+        result.completedOrders = item.count;
+      }
       else if (status === "cancelled") result.cancelled = item.count;
       else if (status === "inprogress") result.inProgress = item.count;
       else if (status === "accepted") result.accepted = item.count;
     });
 
+    result.totalOrders = total;
     return result;
   };
 

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../../utils/async-handler";
 import { logger } from "../../utils/logger";
 import { UserService } from "./user.service";
+import User from "./user.model";
 import { HttpCodes } from "../../constants/status-codes";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
@@ -34,16 +35,26 @@ export class UserController {
 
   getAllUsers = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const query = req.query;
+      const query = { ...req.query, role: "User" } as any;
       const page = parseInt(query.page as string) || 1;
       const limit = parseInt(query.limit as string) || 10;
       const users = await this.userService.getAllUsers(query);
+      const [totalUsers, activeUsers, blockedUsers] = await Promise.all([
+        User.countDocuments({ role: "User" }),
+        User.countDocuments({ role: "User", status: { $ne: "Blocked" } }),
+        User.countDocuments({ role: "User", status: "Blocked" }),
+      ]);
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "All users fetched successfully",
         data: {
           meta: { page, limit, total: users.total },
           result: users.data,
+        },
+        stats: {
+          totalUsers,
+          activeUsers,
+          blockedUsers,
         },
       });
     }
@@ -55,12 +66,24 @@ export class UserController {
       const limit = parseInt(req.query.limit as string) || 10;
       const query = { ...req.query, role: "Rider" };
       const users = await this.userService.getAllUsers(query as any);
+      const [totalRiders, activeRiders, pendingRiders, blockedRiders] = await Promise.all([
+        User.countDocuments({ role: "Rider" }),
+        User.countDocuments({ role: "Rider", status: { $in: ["Active", "Approved"] } }),
+        User.countDocuments({ role: "Rider", status: "Pending" }),
+        User.countDocuments({ role: "Rider", status: "Blocked" }),
+      ]);
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "All riders fetched successfully",
         data: {
           meta: { page, limit, total: users.total },
           result: users.data,
+        },
+        stats: {
+          totalRiders,
+          activeRiders,
+          pendingRiders,
+          blockedRiders,
         },
       });
     }

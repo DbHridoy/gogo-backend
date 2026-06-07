@@ -136,6 +136,15 @@ export class DashboardService {
   };
 
   getOverview = async () => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
     const [totalUsers, activeRiders, completedOrders] = await Promise.all([
       User.countDocuments({ role: "User" }),
       User.countDocuments({ role: "Rider" }),
@@ -144,10 +153,26 @@ export class DashboardService {
 
     const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.price || 0), 0);
 
+    const todayRevenue = completedOrders
+      .filter((order) => {
+        const orderDate = new Date(order.completedAt || order.updatedAt);
+        return orderDate >= todayStart && orderDate <= todayEnd;
+      })
+      .reduce((sum, order) => sum + (order.price || 0), 0);
+
+    const thisMonthRevenue = completedOrders
+      .filter((order) => {
+        const orderDate = new Date(order.completedAt || order.updatedAt);
+        return orderDate >= monthStart;
+      })
+      .reduce((sum, order) => sum + (order.price || 0), 0);
+
     return {
       totalUsers,
       totalRevenue,
       activeRiders,
+      todayRevenue,
+      thisMonthRevenue,
     };
   };
 
@@ -230,13 +255,29 @@ export class DashboardService {
       {
         $group: {
           _id: "$pickup.addressLine",
-          requestCount: { $sum: 1 },
+          numberOfOrders: { $sum: 1 },
+          riders: { $addToSet: "$rider" },
         },
       },
-      { $sort: { requestCount: -1 } },
+      {
+        $project: {
+          areaName: "$_id",
+          numberOfOrders: 1,
+          numberOfRiders: {
+            $size: {
+              $filter: {
+                input: "$riders",
+                as: "r",
+                cond: { $ne: ["$$r", null] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { numberOfOrders: -1 } },
       { $limit: 10 },
     ]);
 
-    return areas.map((a) => ({ areaName: a._id, requestCount: a.requestCount }));
+    return areas;
   };
 }

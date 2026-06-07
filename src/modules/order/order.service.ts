@@ -1,18 +1,22 @@
 import { OrderRepository } from "./order.repository";
+import Settings from "../common/settings.model";
 
 export class OrderService {
   constructor(private orderRepo: OrderRepository) {}
 
   estimatePrice = async (distanceKm: number, durationMin: number, vehicleType?: string) => {
-    let rate = 2.5; // default rate per km
-    let base = 5.0; // default base fare
+    const settingsDoc = await Settings.findOne().lean();
+    const deliverySettings = settingsDoc?.deliverySettings;
+
+    let base = deliverySettings?.baseDeliveryCharge ?? 5.0;
+    let rate = deliverySettings?.chargePerMile ?? 2.5;
 
     if (vehicleType === "Bike") {
-      rate = 1.8;
-      base = 3.5;
+      rate = rate * 0.72;
+      base = base * 0.7;
     } else if (vehicleType === "Truck") {
-      rate = 5.0;
-      base = 12.0;
+      rate = rate * 2.0;
+      base = base * 2.4;
     }
 
     const calculatedPrice = base + (distanceKm * rate);
@@ -44,7 +48,7 @@ export class OrderService {
 
     if (user.role === "Rider") {
       params.riderId = user.userId;
-    } else {
+    } else if (user.role === "User") {
       params.userId = user.userId;
     }
 

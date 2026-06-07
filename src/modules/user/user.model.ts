@@ -37,6 +37,11 @@ const userSchema = new Schema(
       required: true,
       enum: ["Admin", "User", "Rider"],
     },
+    status: {
+      type: String,
+      enum: ["Active", "Approved", "Pending", "Blocked"],
+      default: "Active",
+    },
     password: {
       type: String,
       required: false,
