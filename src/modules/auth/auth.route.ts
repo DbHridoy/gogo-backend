@@ -14,6 +14,7 @@ authRoute.post(
 );
 
 authRoute.post("/login", validate(loginUserSchema), authController.loginUser);
+authRoute.post("/admin/login", validate(loginUserSchema), authController.loginUser);
 
 authRoute.post("/check-user", authController.checkUser);
 
