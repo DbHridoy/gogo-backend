@@ -26,5 +26,9 @@ export const Errors = {
   EnumValue:{
     code:405,
     message:"Invalid enum value"
-  }
+  },
+  BadRequest: {
+    code: 400,
+    message: "Bad request",
+  },
 };

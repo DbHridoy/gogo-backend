@@ -124,7 +124,7 @@ export class UserController {
 
       // If a file is uploaded, attach its URL to the body
       if (req.file) {
-        body.profileImage = req.file.fileUrl;
+        (body as any).profileImage = req.file.fileUrl;
       }
 
       logger.info({ body }, "UserController.updateProfile")

@@ -40,7 +40,7 @@ export class CommonRepository {
 
     return {
       userId: user._id,
-      fullName: user.fullName,
+      fullName: (user as any).fullName,
       email: user.email,
       role: user.role,
       stats: null,

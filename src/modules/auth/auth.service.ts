@@ -79,7 +79,7 @@ export class AuthService {
 
     const payload = {
       userId: user._id,
-      fullName: user.fullName || user.name,
+      fullName: (user as any).fullName || user.name,
       email: user.email,
       role: user.role,
     };
@@ -198,7 +198,7 @@ export class AuthService {
 
     const payload = {
       userId: user._id,
-      fullName: user.fullName || user.name,
+      fullName: (user as any).fullName || user.name,
       email: user.email,
       role: user.role,
     };
@@ -251,7 +251,7 @@ export class AuthService {
 
     const tokenPayload = {
       userId: user._id,
-      fullName: user.fullName,
+      fullName: (user as any).fullName,
       email: user.email,
       role: user.role,
     };
