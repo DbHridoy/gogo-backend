@@ -6,18 +6,11 @@ export class UserRepository {
   constructor(private buildDynamicSearch: any) { }
 
   findUserById = async (id: string) => {
-    return await User.findById(id).populate("salesRep productionManager admin", "_id").lean();
+    return await User.findById(id).lean();
   };
 
   findUserByEmail = async (email: string) => {
-    const user = await User.findOne({ email })
-      .populate([
-        { path: "salesRep", select: "_id -userId" },
-        { path: "productionManager", select: "_id -userId" },
-        { path: "admin", select: "_id -userId" },
-      ])
-      .lean();
-
+    const user = await User.findOne({ email }).lean();
     return user;
   };
 
@@ -45,9 +38,7 @@ export class UserRepository {
 
     // Run both queries concurrently
     const [users, total] = await Promise.all([
-      User.find(baseQuery, null, options).populate(
-        "salesRep productionManager admin"
-      ),
+      User.find(baseQuery, null, options),
       User.countDocuments(baseQuery),
     ]);
 
