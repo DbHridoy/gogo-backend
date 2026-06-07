@@ -35,12 +35,16 @@ export class UserController {
   getAllUsers = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const query = req.query;
+      const page = parseInt(query.page as string) || 1;
+      const limit = parseInt(query.limit as string) || 10;
       const users = await this.userService.getAllUsers(query);
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "All users fetched successfully",
-        data: users.data,
-        total: users.total,
+        data: {
+          meta: { page, limit, total: users.total },
+          result: users.data,
+        },
       });
     }
   );
@@ -48,12 +52,16 @@ export class UserController {
   getRiders = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const query = { ...req.query, role: "Rider" };
+      const page = parseInt(query.page as string) || 1;
+      const limit = parseInt(query.limit as string) || 10;
       const users = await this.userService.getAllUsers(query);
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "All riders fetched successfully",
-        data: users.data,
-        total: users.total,
+        data: {
+          meta: { page, limit, total: users.total },
+          result: users.data,
+        },
       });
     }
   );

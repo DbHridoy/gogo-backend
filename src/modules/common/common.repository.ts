@@ -7,12 +7,11 @@ import Settings from "./settings.model";
 export class CommonRepository {
   getNotification = async (query: {}) => {
     const { filter, search, options } = buildDynamicSearch(Notification, query);
-    const notifications = await Notification.find(
-      { ...filter, ...search },
-      null,
-      options
-    );
-    return notifications;
+    const [notifications, total] = await Promise.all([
+      Notification.find({ ...filter, ...search }, null, options),
+      Notification.countDocuments({ ...filter, ...search })
+    ]);
+    return { data: notifications, total };
   };
 
   getSettings = async () => {

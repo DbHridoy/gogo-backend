@@ -34,11 +34,16 @@ export class CommonController {
   getNotification = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const q = req.query;
+      const page = parseInt(q.page as string) || 1;
+      const limit = parseInt(q.limit as string) || 10;
       const notifications = await this.commonService.getNotification(q);
       res.status(HttpCodes.Ok).send({
         success: true,
         message: "Notification fetched successfully",
-        data: notifications,
+        data: {
+          meta: { page, limit, total: notifications.total },
+          result: notifications.data,
+        },
       });
     }
   );
@@ -47,11 +52,16 @@ export class CommonController {
     async (req: Request, res: Response, next: NextFunction) => {
       const user = req.user!;
       const q = { ...req.query, forUser: user.userId };
+      const page = parseInt(q.page as string) || 1;
+      const limit = parseInt(q.limit as string) || 10;
       const notifications = await this.commonService.getNotification(q);
       res.status(HttpCodes.Ok).send({
         success: true,
         message: "My notifications fetched successfully",
-        data: notifications,
+        data: {
+          meta: { page, limit, total: notifications.total },
+          result: notifications.data,
+        },
       });
     }
   );

@@ -51,12 +51,16 @@ export class OrderController {
   getOrders = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const user = req.user!;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
       const result = await this.orderService.getOrders(user, req.query);
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "Orders fetched successfully",
-        data: result.data,
-        total: result.total,
+        data: {
+          meta: { page, limit, total: result.total },
+          result: result.data,
+        },
       });
     }
   );
