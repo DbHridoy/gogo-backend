@@ -5,6 +5,7 @@ const locationSchema = new Schema({
   longitude: { type: Number, required: true },
   addressLine: String,
   label: String,
+  reachedAt: Date,
 });
 
 const checkpointSchema = new Schema({
@@ -58,10 +59,14 @@ const orderSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Accepted", "InProgress", "Completed", "Cancelled"],
+      enum: ["Pending", "Accepted", "ArrivedPickup", "InProgress", "Completed", "Cancelled"],
       default: "Pending",
     },
     checkpoints: [checkpointSchema],
+    pickupReachedAt: Date,
+    tripStartedAt: Date,
+    completedAt: Date,
+    cancelledAt: Date,
     completionProof: String,
     review: reviewSchema,
     cancellationReason: String,

@@ -88,10 +88,41 @@ export class OrderRepository {
   };
 
   addCheckpoint = async (id: string, checkpoint: any) => {
+    const order = await Order.findById(id);
+    if (!order) return null;
+
+    const updateQuery: any = {
+      $push: { checkpoints: checkpoint },
+    };
+
+    if (checkpoint.pointType === "pickup") {
+      updateQuery.$set = {
+        status: "ArrivedPickup",
+        pickupReachedAt: checkpoint.timestamp || new Date(),
+      };
+    } else if (checkpoint.pointType === "dropoff") {
+      updateQuery.$set = {
+        status: "Completed",
+        completedAt: checkpoint.timestamp || new Date(),
+      };
+    } else if (checkpoint.pointType === "stoppage" && checkpoint.stoppageId) {
+      updateQuery.$set = {
+        status: "InProgress",
+        "stoppages.$[elem].reachedAt": checkpoint.timestamp || new Date(),
+      };
+      if (!order.tripStartedAt) {
+        updateQuery.$set.tripStartedAt = new Date();
+      }
+    }
+
+    const arrayFilters = checkpoint.pointType === "stoppage" && checkpoint.stoppageId
+      ? [{ "elem._id": checkpoint.stoppageId }]
+      : undefined;
+
     return await Order.findByIdAndUpdate(
       id,
-      { $push: { checkpoints: checkpoint } },
-      { new: true }
+      updateQuery,
+      { new: true, arrayFilters }
     );
   };
 
