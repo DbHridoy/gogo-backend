@@ -10,8 +10,20 @@ export class CommonService {
     return notifications;
   };
 
+  getSettings = async () => {
+    return this.commonRepository.getSettings();
+  };
+
+  updateSettings = async (updateObj: any) => {
+    return this.commonRepository.updateSettings(updateObj);
+  };
+
   markNotificationRead = async (notificationId: string, userId: string) => {
     return this.commonRepository.markNotificationRead(notificationId, userId);
+  };
+
+  markAllNotificationsRead = async (userId: string) => {
+    return this.commonRepository.markAllNotificationsRead(userId);
   };
 
   getMyStats = async (user: any, periodType?: string, date?: Date) => {

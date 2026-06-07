@@ -21,6 +21,12 @@ userRoute.post("/", authMiddleware.authorize(["Admin"]), validate(CreateUserSche
 userRoute.get("/", userController.getAllUsers);
 
 userRoute.get(
+  "/riders",
+  authMiddleware.authorize(["Admin"]),
+  userController.getRiders
+);
+
+userRoute.get(
   "/me",
   authMiddleware.authenticate,
   userController.getMyProfile

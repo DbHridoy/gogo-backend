@@ -15,6 +15,15 @@ authRoute.post(
 
 authRoute.post("/login", validate(loginUserSchema), authController.loginUser);
 authRoute.post("/admin/login", validate(loginUserSchema), authController.loginUser);
+authRoute.post("/admin/forgot-password", authController.sendOtp);
+authRoute.post("/admin/verify-reset-otp", authController.verifyOtp);
+authRoute.post("/admin/reset-password", authController.setNewPassword);
+authRoute.post(
+  "/admin/change-password",
+  authMiddleware.authenticate,
+  validate(changePasswordSchema),
+  authController.changePassword
+);
 
 authRoute.post("/check-user", authController.checkUser);
 

@@ -45,6 +45,19 @@ export class UserController {
     }
   );
 
+  getRiders = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const query = { ...req.query, role: "Rider" };
+      const users = await this.userService.getAllUsers(query);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "All riders fetched successfully",
+        data: users.data,
+        total: users.total,
+      });
+    }
+  );
+
   getUserById = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const { id } = req.params;

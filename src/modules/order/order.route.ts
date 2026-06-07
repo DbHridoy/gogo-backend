@@ -9,6 +9,11 @@ const orderRoute = Router();
 orderRoute.use(authMiddleware.authenticate);
 
 orderRoute.get("/", orderController.getOrders);
+orderRoute.get(
+  "/summary",
+  authMiddleware.authorize(["Admin"]),
+  orderController.getOrderSummary
+);
 orderRoute.post("/", orderController.createOrder);
 orderRoute.post("/estimate-price", orderController.estimatePrice);
 

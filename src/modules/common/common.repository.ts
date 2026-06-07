@@ -2,6 +2,7 @@ import { buildDynamicSearch } from "../../utils/dynamic-search-utils";
 import { Notification } from "./notification.model";
 import { logger } from "../../utils/logger";
 import User from "../user/user.model";
+import Settings from "./settings.model";
 
 export class CommonRepository {
   getNotification = async (query: {}) => {
@@ -14,6 +15,19 @@ export class CommonRepository {
     return notifications;
   };
 
+  getSettings = async () => {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = await Settings.create({});
+    }
+    return settings;
+  };
+
+  updateSettings = async (updateObj: any) => {
+    const settings = await this.getSettings();
+    return Settings.findByIdAndUpdate(settings._id, updateObj, { new: true });
+  };
+
   markNotificationRead = async (notificationId: string, userId: string) => {
     const updated = await Notification.findOneAndUpdate(
       { _id: notificationId, forUser: userId, isRead: false },
@@ -24,6 +38,13 @@ export class CommonRepository {
       return updated;
     }
     return Notification.findOne({ _id: notificationId, forUser: userId });
+  };
+
+  markAllNotificationsRead = async (userId: string) => {
+    return Notification.updateMany(
+      { forUser: userId, isRead: false },
+      { isRead: true }
+    );
   };
 
   getUserStatsById = async (

@@ -6,6 +6,7 @@ import orderRoute from "../modules/order/order.route";
 import paymentRoute from "../modules/payment/payment.route";
 import dashboardRoute from "../modules/dashboard/dashboard.route";
 import notificationRoute from "../modules/notification/notification.route";
+import statisticsRoute from "../modules/statistics/statistics.route";
 
 const appRouter = Router();
 
@@ -37,6 +38,10 @@ const moduleRoutes = [
   {
     path: "/notifications",
     router: notificationRoute,
+  },
+  {
+    path: "/statistics",
+    router: statisticsRoute,
   },
 ];
 

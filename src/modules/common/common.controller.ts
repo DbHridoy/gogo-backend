@@ -72,6 +72,52 @@ export class CommonController {
     }
   );
 
+  markAllNotificationsRead = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const user = req.user!;
+      await this.commonService.markAllNotificationsRead(user.userId);
+      res.status(HttpCodes.Ok).send({
+        success: true,
+        message: "All notifications marked as read",
+        data: null,
+      });
+    }
+  );
+
+  getSettings = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const settings = await this.commonService.getSettings();
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        data: settings,
+      });
+    }
+  );
+
+  updateContent = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const updated = await this.commonService.updateSettings(req.body);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Content updated successfully",
+        data: updated,
+      });
+    }
+  );
+
+  updateDeliverySettings = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const updated = await this.commonService.updateSettings({
+        deliverySettings: req.body,
+      });
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Delivery settings updated successfully",
+        data: updated,
+      });
+    }
+  );
+
   getMyStats = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const user = req.user!;

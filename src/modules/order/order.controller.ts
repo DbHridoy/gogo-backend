@@ -61,6 +61,17 @@ export class OrderController {
     }
   );
 
+  getOrderSummary = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const data = await this.orderService.getOrderSummary();
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Order summary fetched successfully",
+        data,
+      });
+    }
+  );
+
   cancelOrder = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const { id } = req.params;

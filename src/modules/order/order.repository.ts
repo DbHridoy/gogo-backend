@@ -45,6 +45,36 @@ export class OrderRepository {
     return { data: orders, total };
   };
 
+  getOrderSummary = async () => {
+    const summary = await Order.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const result = {
+      pending: 0,
+      completed: 0,
+      cancelled: 0,
+      inProgress: 0,
+      accepted: 0
+    };
+
+    summary.forEach((item) => {
+      const status = item._id.toLowerCase();
+      if (status === "pending") result.pending = item.count;
+      else if (status === "completed") result.completed = item.count;
+      else if (status === "cancelled") result.cancelled = item.count;
+      else if (status === "inprogress") result.inProgress = item.count;
+      else if (status === "accepted") result.accepted = item.count;
+    });
+
+    return result;
+  };
+
   updateOrderStatus = async (id: string, status: string) => {
     return await Order.findByIdAndUpdate(id, { status }, { new: true });
   };

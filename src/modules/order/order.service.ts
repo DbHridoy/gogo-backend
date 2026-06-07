@@ -51,6 +51,10 @@ export class OrderService {
     return await this.orderRepo.getOrders(params);
   };
 
+  getOrderSummary = async () => {
+    return await this.orderRepo.getOrderSummary();
+  };
+
   cancelOrder = async (id: string, reason?: string) => {
     return await this.orderRepo.cancelOrder(id, reason);
   };
