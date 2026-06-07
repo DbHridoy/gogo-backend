@@ -92,8 +92,8 @@ export class AuthController {
 
   verifyOtp = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { email, otp } = req.body;
-      const record = await this.authService.verifyOtp(email, otp);
+      const { email, otp, phoneNumber, idToken } = req.body;
+      const record = await this.authService.verifyOtp(email, otp, phoneNumber, idToken);
       return res.status(HttpCodes.Ok).json(record);
     }
   );

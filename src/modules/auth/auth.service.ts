@@ -148,7 +148,15 @@ export class AuthService {
     }
   }
 
-  async verifyOtp(email: string, otp: string) {
+  async verifyOtp(emailOrPhone: string, otpOrToken: string, phoneNumber?: string, idToken?: string) {
+    // Flow 1: Firebase phone verification (from mobile apps)
+    if (phoneNumber && idToken) {
+      return this.verifyFirebasePhone(phoneNumber, idToken);
+    }
+
+    // Flow 2: Legacy email OTP verification (for password reset)
+    const email = emailOrPhone;
+    const otp = otpOrToken;
     logger.info(`from service layer - email: ${email}, otp: ${otp}`);
     const record = await this.authRepo.matchOtp(email, Number(otp));
     if (!record) {
@@ -163,6 +171,50 @@ export class AuthService {
     await this.authRepo.deleteOtp(record._id);
 
     return { success: true, message: "OTP verified successfully" };
+  }
+
+  private async verifyFirebasePhone(phoneNumber: string, idToken: string) {
+    const admin = (await import("../../config/firebase")).default;
+
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(idToken);
+    } catch (error) {
+      logger.error(error, "Firebase ID token verification failed");
+      throw new apiError(Errors.Unauthorized.code, "Invalid or expired Firebase token");
+    }
+
+    // Ensure the token's phone matches
+    const tokenPhone = decodedToken.phone_number;
+    if (tokenPhone !== phoneNumber) {
+      throw new apiError(Errors.Unauthorized.code, "Phone number mismatch");
+    }
+
+    // Find or create user
+    let user = await this.userRepo.findUserByPhone(phoneNumber);
+    if (!user) {
+      throw new apiError(Errors.NotFound.code, "User not found. Please register first.");
+    }
+
+    const payload = {
+      userId: user._id,
+      fullName: user.fullName || user.name,
+      email: user.email,
+      role: user.role,
+    };
+
+    const accessToken = await this.jwtUtils.generateAccessToken(payload);
+    const refreshToken = await this.jwtUtils.generateRefreshToken(payload);
+
+    return {
+      success: true,
+      message: "Phone verified successfully",
+      data: {
+        user,
+        accessToken,
+        refreshToken,
+      },
+    };
   }
 
   async setNewPassword(email: string, newPassword: string) {
