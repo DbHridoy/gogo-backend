@@ -19,6 +19,9 @@ import { PaymentService } from "./modules/payment/payment.service";
 import { PaymentController } from "./modules/payment/payment.controller";
 import { DashboardService } from "./modules/dashboard/dashboard.service";
 import { DashboardController } from "./modules/dashboard/dashboard.controller";
+import { ReportRepository } from "./modules/report/report.repository";
+import { ReportService } from "./modules/report/report.service";
+import { ReportController } from "./modules/report/report.controller";
 
 export const hashUtils = new HashUtils();
 export const jwtUtils = new JwtUtils();
@@ -53,3 +56,7 @@ export const paymentController = new PaymentController(paymentService);
 
 export const dashboardService = new DashboardService();
 export const dashboardController = new DashboardController(dashboardService);
+
+export const reportRepository = new ReportRepository();
+export const reportService = new ReportService(reportRepository);
+export const reportController = new ReportController(reportService);
