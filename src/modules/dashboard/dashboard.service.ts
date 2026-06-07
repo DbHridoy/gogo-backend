@@ -13,7 +13,11 @@ export class DashboardService {
       Order.find({
         rider: riderId,
         status: "Completed",
-        updatedAt: { $gte: todayStart, $lte: todayEnd },
+        $or: [
+          { completedAt: { $gte: todayStart, $lte: todayEnd } },
+          { completedAt: { $exists: false }, updatedAt: { $gte: todayStart, $lte: todayEnd } },
+          { completedAt: null, updatedAt: { $gte: todayStart, $lte: todayEnd } }
+        ]
       }).lean(),
       Order.find({
         rider: riderId,

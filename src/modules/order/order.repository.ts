@@ -76,7 +76,11 @@ export class OrderRepository {
   };
 
   updateOrderStatus = async (id: string, status: string) => {
-    return await Order.findByIdAndUpdate(id, { status }, { new: true });
+    const update: any = { status };
+    if (status === "Completed") {
+      update.completedAt = new Date();
+    }
+    return await Order.findByIdAndUpdate(id, update, { new: true });
   };
 
   assignRider = async (id: string, riderId: string) => {
