@@ -1,5 +1,5 @@
 import { ReportRepository } from "./report.repository";
-import { AppError } from "../../utils/app-error";
+import { apiError } from "../../errors/api-error";
 import { HttpCodes } from "../../constants/status-codes";
 
 export class ReportService {
@@ -35,7 +35,7 @@ export class ReportService {
   async resolveReport(id: string) {
     const report = await this.reportRepository.updateStatus(id, "Resolved");
     if (!report) {
-      throw new AppError(HttpCodes.NotFound, "Report not found");
+      throw new apiError(HttpCodes.NotFound, "Report not found");
     }
     return report;
   }
