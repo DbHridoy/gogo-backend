@@ -1,4 +1,4 @@
-import { FilterQuery, Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { Report, IReport } from "./report.model";
 
 export class ReportRepository {
@@ -8,7 +8,7 @@ export class ReportRepository {
   }
 
   async find(
-    filter: FilterQuery<IReport>,
+    filter: any,
     skip: number,
     limit: number
   ): Promise<IReport[]> {
@@ -19,7 +19,7 @@ export class ReportRepository {
       .populate("reporter", "firstName lastName email name");
   }
 
-  async count(filter: FilterQuery<IReport>): Promise<number> {
+  async count(filter: any): Promise<number> {
     return Report.countDocuments(filter);
   }
 

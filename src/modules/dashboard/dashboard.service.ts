@@ -26,15 +26,20 @@ export class DashboardService {
 
     const activeRide = await Order.findOne({
       rider: riderId,
-      status: { $in: ["Accepted", "InProgress"] },
+      status: { $in: ["Accepted", "ArrivedPickup", "InProgress"] },
     }).lean();
 
     return {
       todayEarnings,
       totalEarnings,
+      todayRides: todayRides.length,
+      totalRides: allRides.length,
       todayTripsCount: todayRides.length,
       totalTripsCount: allRides.length,
       activeRide,
+      hoursOnline: 0,
+      averageRating: 5.0,
+      acceptanceRate: 100,
     };
   };
 
@@ -46,15 +51,84 @@ export class DashboardService {
       .sort({ updatedAt: -1 })
       .lean();
 
-    const earningsLog = completedRides.map((ride) => ({
-      orderId: ride._id,
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const todayEarnings = completedRides
+      .filter((ride) => {
+        const rDate = new Date(ride.completedAt || ride.updatedAt);
+        return rDate >= todayStart && rDate <= todayEnd;
+      })
+      .reduce((sum, ride) => sum + (ride.price || 0), 0);
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+
+    const weekEarnings = completedRides
+      .filter((ride) => new Date(ride.completedAt || ride.updatedAt) >= oneWeekAgo)
+      .reduce((sum, ride) => sum + (ride.price || 0), 0);
+
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+    oneMonthAgo.setHours(0, 0, 0, 0);
+
+    const monthEarnings = completedRides
+      .filter((ride) => new Date(ride.completedAt || ride.updatedAt) >= oneMonthAgo)
+      .reduce((sum, ride) => sum + (ride.price || 0), 0);
+
+    const totalEarnings = completedRides.reduce((sum, ride) => sum + (ride.price || 0), 0);
+
+    const pendingEarnings = completedRides
+      .filter((ride) => ride.paymentMethod === "Card" && ride.paymentStatus !== "Paid")
+      .reduce((sum, ride) => sum + (ride.price || 0), 0);
+
+    // Prepare dailyTrend for last 7 days
+    const dailyTrend: { date: string; amount: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+
+      const startOfDay = new Date(d);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(d);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const dayAmount = completedRides
+        .filter((ride) => {
+          const rDate = new Date(ride.completedAt || ride.updatedAt);
+          return rDate >= startOfDay && rDate <= endOfDay;
+        })
+        .reduce((sum, ride) => sum + (ride.price || 0), 0);
+
+      dailyTrend.push({
+        date: dateStr,
+        amount: Math.round(dayAmount * 100) / 100,
+      });
+    }
+
+    const transactions = completedRides.map((ride) => ({
+      id: ride._id.toString(),
+      type: "ride",
       amount: ride.price,
-      date: ride.updatedAt,
-      pickup: ride.pickup?.addressLine,
-      dropoff: ride.dropoff?.addressLine,
+      status: (ride.paymentMethod === "Cash" || ride.paymentStatus === "Paid") ? "completed" : "pending",
+      date: ride.completedAt || ride.updatedAt || new Date(),
+      description: `Ride to ${ride.dropoff?.addressLine || "Destination"}`,
+      rideId: ride._id.toString(),
     }));
 
-    return earningsLog;
+    return {
+      total: totalEarnings,
+      today: todayEarnings,
+      week: weekEarnings,
+      month: monthEarnings,
+      pending: pendingEarnings,
+      dailyTrend,
+      transactions,
+    };
   };
 
   getOverview = async () => {

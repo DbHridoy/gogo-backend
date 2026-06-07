@@ -51,10 +51,10 @@ export class UserController {
 
   getRiders = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
       const query = { ...req.query, role: "Rider" };
-      const page = parseInt(query.page as string) || 1;
-      const limit = parseInt(query.limit as string) || 10;
-      const users = await this.userService.getAllUsers(query);
+      const users = await this.userService.getAllUsers(query as any);
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "All riders fetched successfully",

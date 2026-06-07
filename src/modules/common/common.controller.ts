@@ -51,10 +51,10 @@ export class CommonController {
   getMyNotifications = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const user = req.user!;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
       const q = { ...req.query, forUser: user.userId };
-      const page = parseInt(q.page as string) || 1;
-      const limit = parseInt(q.limit as string) || 10;
-      const notifications = await this.commonService.getNotification(q);
+      const notifications = await this.commonService.getNotification(q as any);
       res.status(HttpCodes.Ok).send({
         success: true,
         message: "My notifications fetched successfully",

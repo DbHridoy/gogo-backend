@@ -11,7 +11,7 @@ export class ReportService {
     title: string;
     description: string;
   }) {
-    return this.reportRepository.create(data);
+    return this.reportRepository.create(data as any);
   }
 
   async getReports(page: number = 1, limit: number = 10) {

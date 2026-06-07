@@ -57,6 +57,11 @@ const orderSchema = new Schema(
       enum: ["Card", "Cash"],
       default: "Cash",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Unpaid", "Pending", "Paid"],
+      default: "Unpaid",
+    },
     status: {
       type: String,
       enum: ["Pending", "Accepted", "ArrivedPickup", "InProgress", "Completed", "Cancelled"],

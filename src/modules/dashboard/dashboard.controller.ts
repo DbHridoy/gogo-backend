@@ -92,10 +92,7 @@ export class DashboardController {
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "Admin earnings fetched successfully",
-        data: {
-          meta: { page, limit, total: data.length },
-          result: data,
-        },
+        data,
       });
     }
   );
