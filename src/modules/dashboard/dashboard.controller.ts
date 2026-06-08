@@ -58,9 +58,10 @@ export class DashboardController {
 
   getRiderGrowth = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { timeframe } = req.query;
+      const { year, month } = req.query;
       const data = await this.dashboardService.getRiderGrowth(
-        timeframe as string
+        year as string,
+        month as string
       );
       res.status(HttpCodes.Ok).json({
         success: true,
@@ -72,9 +73,10 @@ export class DashboardController {
 
   getRevenueTrend = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { timeframe } = req.query;
+      const { year, month } = req.query;
       const data = await this.dashboardService.getRevenueTrend(
-        timeframe as string
+        year as string,
+        month as string
       );
       res.status(HttpCodes.Ok).json({
         success: true,

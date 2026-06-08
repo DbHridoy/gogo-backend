@@ -198,10 +198,16 @@ export class DashboardService {
     return growth.map((g) => ({ date: g._id, count: g.count }));
   };
 
-  getRiderGrowth = async (timeframe?: string) => {
-    // Similar to user growth, could implement timeframe filtering
+  getRiderGrowth = async (year?: string, month?: string) => {
+    const matchStage: any = { role: "Rider" };
+    if (year) {
+      const start = new Date(Number(year), month ? Number(month) - 1 : 0, 1);
+      const end = new Date(Number(year), month ? Number(month) : 12, 1);
+      matchStage.createdAt = { $gte: start, $lt: end };
+    }
+
     const growth = await User.aggregate([
-      { $match: { role: "Rider" } },
+      { $match: matchStage },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -214,9 +220,16 @@ export class DashboardService {
     return growth.map((g) => ({ date: g._id, count: g.count }));
   };
 
-  getRevenueTrend = async (timeframe?: string) => {
+  getRevenueTrend = async (year?: string, month?: string) => {
+    const matchStage: any = { status: "Completed" };
+    if (year) {
+      const start = new Date(Number(year), month ? Number(month) - 1 : 0, 1);
+      const end = new Date(Number(year), month ? Number(month) : 12, 1);
+      matchStage.updatedAt = { $gte: start, $lt: end };
+    }
+
     const trend = await Order.aggregate([
-      { $match: { status: "Completed" } },
+      { $match: matchStage },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
