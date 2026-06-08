@@ -1,5 +1,7 @@
 import { OrderRepository } from "./order.repository";
 import Settings from "../common/settings.model";
+import { apiError } from "../../errors/api-error";
+import User from "../user/user.model";
 
 export class OrderService {
   constructor(private orderRepo: OrderRepository) {}
@@ -64,6 +66,13 @@ export class OrderService {
   };
 
   assignRider = async (id: string, riderId: string) => {
+    const rider = await User.findById(riderId);
+    if (!rider) {
+      throw new apiError(404, "Driver not found");
+    }
+    if (!rider.isOnline) {
+      throw new apiError(400, "Driver is offline. Go online to accept rides.");
+    }
     return await this.orderRepo.assignRider(id, riderId);
   };
 
