@@ -9,10 +9,15 @@ export const corsOptions: CorsOptions = {
     // allow requests with no origin (Postman, mobile apps)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      origin === "https://gogo-dashboard.vercel.app" ||
+      origin.endsWith(".vercel.app");
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error("CORS: Origin not allowed"));
+      callback(new Error(`CORS: Origin ${origin} not allowed`));
     }
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
