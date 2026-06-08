@@ -155,6 +155,14 @@ export class OrderRepository {
   };
 
   setCompletionProof = async (id: string, completionProof: string) => {
-    return await Order.findByIdAndUpdate(id, { completionProof }, { new: true });
+    const order = await Order.findById(id);
+    if (!order) return null;
+
+    const updateQuery: any = { completionProof };
+    if (order.paymentMethod === "Cash") {
+      updateQuery.paymentStatus = "Paid";
+    }
+
+    return await Order.findByIdAndUpdate(id, updateQuery, { new: true });
   };
 }
