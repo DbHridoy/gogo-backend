@@ -19,6 +19,12 @@ const settingsSchema = new Schema(
       perKmRate: { type: Number, default: 2.5 },
       serviceRadius: { type: Number, default: 50 },
     },
+    faqs: [
+      {
+        question: { type: String, required: true },
+        answer: { type: String, required: true },
+      },
+    ],
   },
   {
     timestamps: true,
