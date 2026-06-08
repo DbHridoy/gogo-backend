@@ -58,6 +58,10 @@ const userSchema = new Schema(
       updatedAt: Date,
     },
     addresses: [addressSchema],
+    profileImage: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
