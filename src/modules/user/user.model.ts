@@ -7,6 +7,21 @@ const addressSchema = new Schema({
   longitude: Number,
 });
 
+const vehicleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      default: "Car",
+    },
+    make: String,
+    model: String,
+    year: String,
+    plateNumber: String,
+    color: String,
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema(
   {
     name: {
@@ -65,6 +80,10 @@ const userSchema = new Schema(
     isOnline: {
       type: Boolean,
       default: false,
+    },
+    vehicle: {
+      type: vehicleSchema,
+      required: false,
     },
   },
   {
