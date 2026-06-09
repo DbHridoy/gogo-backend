@@ -30,6 +30,8 @@ export class OrderService {
       vehicleType: vehicleType as any,
       price: roundedPrice,
       currency: "AED",
+      baseCharge: base,
+      ratePerKm: rate,
     };
   };
 
