@@ -50,8 +50,9 @@ export class OrderRepository {
     requestVisibilityDistanceMeters?: number | null;
     requestVisibilityInfinite?: boolean;
   }) => {
-    const page = query.page || 1;
-    const limit = query.limit || 20;
+    const page = Number(query.page) || 1;
+    const requestedLimit = Number(query.limit);
+    const limit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? requestedLimit : 20;
     const skip = (page - 1) * limit;
 
     const filter: any = {};
@@ -109,8 +110,13 @@ export class OrderRepository {
           return aDistance - bDistance;
         });
 
+      const hasExplicitLimit =
+        query.limit !== undefined && Number.isFinite(requestedLimit) && requestedLimit > 0;
+
       return {
-        data: ordersWithDistance.slice(skip, skip + limit),
+        data: hasExplicitLimit
+          ? ordersWithDistance.slice(skip, skip + limit)
+          : ordersWithDistance,
         total: ordersWithDistance.length,
       };
     } else if (query.riderId) {
