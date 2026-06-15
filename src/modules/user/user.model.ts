@@ -54,7 +54,7 @@ const userSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Approved", "Pending", "Blocked"],
+      enum: ["Active", "Approved", "Pending", "Blocked", "Rejected"],
       default: "Active",
     },
     password: {
@@ -84,6 +84,24 @@ const userSchema = new Schema(
     vehicle: {
       type: vehicleSchema,
       required: false,
+    },
+    payoutAccount: {
+      provider: { type: String, default: "Tap" },
+      status: {
+        type: String,
+        enum: ["NotConnected", "Pending", "Connected", "Rejected"],
+        default: "NotConnected",
+      },
+      tapMerchantId: String,
+      accountHolderName: String,
+      bankName: String,
+      iban: String,
+      accountNumberLast4: String,
+      country: { type: String, default: "AE" },
+      currency: { type: String, default: "AED" },
+      rejectionReason: String,
+      connectedAt: Date,
+      updatedAt: Date,
     },
   },
   {

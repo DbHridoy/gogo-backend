@@ -99,6 +99,43 @@ export class DashboardController {
     }
   );
 
+  getDriverPayouts = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const data = await this.dashboardService.getDriverPayouts(req.query);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Driver settlements fetched successfully",
+        data,
+      });
+    }
+  );
+
+  getDriverPayoutHistory = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const data = await this.dashboardService.getDriverPayoutHistory(req.query);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Driver settlement history fetched successfully",
+        data,
+      });
+    }
+  );
+
+  payDriver = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const data = await this.dashboardService.payDriver(
+        req.params.riderId,
+        req.body,
+        req.user?.userId
+      );
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Driver payment marked as paid successfully",
+        data,
+      });
+    }
+  );
+
   getHotAreas = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const { timeframe } = req.query;

@@ -66,11 +66,12 @@ export class UserController {
       const limit = parseInt(req.query.limit as string) || 10;
       const query = { ...req.query, role: "Rider" };
       const users = await this.userService.getAllUsers(query as any);
-      const [totalRiders, activeRiders, pendingRiders, blockedRiders] = await Promise.all([
+      const [totalRiders, activeRiders, pendingRiders, blockedRiders, rejectedRiders] = await Promise.all([
         User.countDocuments({ role: "Rider" }),
         User.countDocuments({ role: "Rider", status: { $in: ["Active", "Approved"] } }),
         User.countDocuments({ role: "Rider", status: "Pending" }),
         User.countDocuments({ role: "Rider", status: "Blocked" }),
+        User.countDocuments({ role: "Rider", status: "Rejected" }),
       ]);
       res.status(HttpCodes.Ok).json({
         success: true,
@@ -84,6 +85,7 @@ export class UserController {
           activeRiders,
           pendingRiders,
           blockedRiders,
+          rejectedRiders,
         },
       });
     }
@@ -118,6 +120,22 @@ export class UserController {
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "User deleted successfully",
+        data: user,
+      });
+    }
+  );
+
+  deleteMyAccount = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new apiError(Errors.NotFound.code, Errors.NotFound.message);
+      }
+
+      const user = await this.userService.deleteMyAccount(userId);
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Account deleted successfully",
         data: user,
       });
     }
@@ -193,6 +211,21 @@ export class UserController {
       res.status(HttpCodes.Ok).json({
         success: true,
         message: "Location updated successfully",
+        data: updatedUser,
+      });
+    }
+  );
+
+  updatePayoutAccount = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user!.userId;
+      const updatedUser = await this.userService.updatePayoutAccount(
+        userId,
+        req.body
+      );
+      res.status(HttpCodes.Ok).json({
+        success: true,
+        message: "Payout account updated successfully",
         data: updatedUser,
       });
     }

@@ -8,6 +8,7 @@ import { createUserType } from "./auth.type";
 import { HashUtils } from "../../utils/hash-utils";
 import { JwtUtils } from "../../utils/jwt-utils";
 import { Mailer } from "../../utils/mailer-utils";
+import { normalizeVehicleType } from "../../utils/driver-onboarding";
 
 export class AuthService {
 
@@ -43,6 +44,13 @@ export class AuthService {
     const user = {
       ...userBody,
       name,
+      status: userBody.role === "Rider" ? "Pending" : userBody.status,
+      vehicle: userBody.role === "Rider" && userBody.vehicle?.type
+        ? {
+            ...userBody.vehicle,
+            type: normalizeVehicleType(userBody.vehicle.type) || "Bike",
+          }
+        : userBody.vehicle,
       password: hashedPassword,
     };
 

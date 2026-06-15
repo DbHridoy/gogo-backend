@@ -90,6 +90,14 @@ export class UserRepository {
     );
   };
 
+  updatePayoutAccount = async (id: string, payoutAccount: any) => {
+    return await User.findByIdAndUpdate(
+      id,
+      { $set: { payoutAccount } },
+      { new: true }
+    );
+  };
+
   getAddresses = async (id: string) => {
     const user = await User.findById(id).select("addresses");
     return user?.addresses || [];

@@ -30,6 +30,23 @@ const paymentSchema = new Schema(
       type: String,
       default: "Initiated",
     },
+    adminCommissionPercent: {
+      type: Number,
+      default: 10,
+    },
+    adminCommissionAmount: {
+      type: Number,
+      default: 0,
+    },
+    driverEarningsAmount: {
+      type: Number,
+      default: 0,
+    },
+    payoutStatus: {
+      type: String,
+      enum: ["NotReady", "Pending", "Paid", "Failed"],
+      default: "NotReady",
+    },
   },
   {
     timestamps: true,

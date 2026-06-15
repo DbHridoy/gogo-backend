@@ -1,5 +1,7 @@
-import { Types } from "mongoose";
 import Order from "./order.model";
+import { calculateDistanceMeters } from "../../utils/distance-utils";
+import { ACTIVE_ORDER_STATUSES } from "../../utils/driver-onboarding";
+import User from "../user/user.model";
 
 export class OrderRepository {
   createOrder = async (orderData: any) => {
@@ -9,10 +11,45 @@ export class OrderRepository {
   };
 
   getOrderById = async (id: string) => {
-    return await Order.findById(id).populate("user rider").lean();
+    const order = await Order.findById(id).populate("user rider").lean();
+    if (order && order.rider) {
+      const riderId = order.rider._id;
+      const reviews = await Order.find({
+        rider: riderId,
+        status: "Completed",
+        "review.rating": { $exists: true }
+      }).select("review.rating").lean();
+
+      let avgRating = 5.0;
+      if (reviews.length > 0) {
+        const sum = reviews.reduce((acc, curr) => acc + (curr.review?.rating || 0), 0);
+        avgRating = Math.round((sum / reviews.length) * 10) / 10;
+      }
+      (order.rider as any).rating = avgRating.toFixed(1);
+      (order as any).driver = {
+        ...((order as any).driver || {}),
+        rating: avgRating.toFixed(1),
+      };
+    }
+    return order;
   };
 
-  getOrders = async (query: { userId?: string; riderId?: string; status?: string; scope?: string; page?: number; limit?: number }) => {
+  getRawOrderById = async (id: string) => {
+    return await Order.findById(id).lean();
+  };
+
+  getOrders = async (query: {
+    userId?: string;
+    riderId?: string;
+    status?: string;
+    scope?: string;
+    page?: number;
+    limit?: number;
+    riderVehicleType?: string | null;
+    riderLocation?: { latitude?: number; longitude?: number };
+    requestVisibilityDistanceMeters?: number | null;
+    requestVisibilityInfinite?: boolean;
+  }) => {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
@@ -24,8 +61,58 @@ export class OrderRepository {
     }
 
     if (query.scope === "available") {
+      if (!query.riderVehicleType) {
+        return { data: [], total: 0 };
+      }
+
       filter.status = "Pending";
-      filter.rider = { $exists: false };
+      filter.$and = [
+        { $or: [{ rider: { $exists: false } }, { rider: null }] },
+        {
+          $or: [
+            { paymentMethod: "Cash" },
+            { paymentMethod: "Card", paymentStatus: "Paid" },
+          ],
+        },
+      ];
+      filter.vehicleType = query.riderVehicleType;
+
+      const rawOrders = await Order.find(filter)
+        .populate("user rider")
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const ordersWithDistance = rawOrders
+        .map((order: any) => {
+          const distanceFromDriverMeters = calculateDistanceMeters(
+            query.riderLocation,
+            order.pickup
+          );
+          return {
+            ...order,
+            distanceFromDriverMeters,
+            distanceFromDriverKm:
+              distanceFromDriverMeters == null
+                ? null
+                : Math.round((distanceFromDriverMeters / 1000) * 100) / 100,
+          };
+        })
+        .filter((order: any) => {
+          if (query.requestVisibilityInfinite) return true;
+          if (query.requestVisibilityDistanceMeters == null) return true;
+          if (order.distanceFromDriverMeters == null) return false;
+          return order.distanceFromDriverMeters <= query.requestVisibilityDistanceMeters;
+        })
+        .sort((a: any, b: any) => {
+          const aDistance = a.distanceFromDriverMeters ?? Number.POSITIVE_INFINITY;
+          const bDistance = b.distanceFromDriverMeters ?? Number.POSITIVE_INFINITY;
+          return aDistance - bDistance;
+        });
+
+      return {
+        data: ordersWithDistance.slice(skip, skip + limit),
+        total: ordersWithDistance.length,
+      };
     } else if (query.riderId) {
       filter.rider = query.riderId;
     } else if (query.userId) {
@@ -88,17 +175,38 @@ export class OrderRepository {
   };
 
   updateOrderStatus = async (id: string, status: string) => {
+    const order = await Order.findById(id).lean();
     const update: any = { status };
     if (status === "Completed") {
       update.completedAt = new Date();
+      update.paymentStatus =
+        order?.paymentMethod === "Cash" ? "Paid" : order?.paymentStatus;
+      update.payoutStatus =
+        order?.paymentMethod === "Cash" ? "Paid" : "Pending";
+      update.settlementStatus = "Unsettled";
     }
     return await Order.findByIdAndUpdate(id, update, { new: true });
   };
 
   assignRider = async (id: string, riderId: string) => {
+    const rider: any = await User.findById(riderId).lean();
     return await Order.findByIdAndUpdate(
       id,
-      { rider: riderId, status: "Accepted" },
+      {
+        rider: riderId,
+        status: "Accepted",
+        acceptedAt: new Date(),
+        payoutAccountSnapshot: rider?.payoutAccount
+          ? {
+              provider: rider.payoutAccount.provider,
+              tapMerchantId: rider.payoutAccount.tapMerchantId,
+              status: rider.payoutAccount.status,
+              accountNumberLast4: rider.payoutAccount.accountNumberLast4,
+              iban: rider.payoutAccount.iban,
+              bankName: rider.payoutAccount.bankName,
+            }
+          : undefined,
+      },
       { new: true }
     );
   };
@@ -117,9 +225,14 @@ export class OrderRepository {
         pickupReachedAt: checkpoint.timestamp || new Date(),
       };
     } else if (checkpoint.pointType === "dropoff") {
+      const isCash = order.paymentMethod === "Cash";
       updateQuery.$set = {
         status: "Completed",
         completedAt: checkpoint.timestamp || new Date(),
+        dropoffReachedAt: checkpoint.timestamp || new Date(),
+        paymentStatus: isCash ? "Paid" : order.paymentStatus,
+        payoutStatus: isCash ? "Paid" : "Pending",
+        settlementStatus: "Unsettled",
       };
     } else if (checkpoint.pointType === "stoppage" && checkpoint.stoppageId) {
       updateQuery.$set = {
@@ -159,10 +272,14 @@ export class OrderRepository {
     if (!order) return null;
 
     const updateQuery: any = { completionProof };
-    if (order.paymentMethod === "Cash") {
-      updateQuery.paymentStatus = "Paid";
-    }
 
     return await Order.findByIdAndUpdate(id, updateQuery, { new: true });
+  };
+
+  findActiveOrderByRider = async (riderId: string) => {
+    return await Order.findOne({
+      rider: riderId,
+      status: { $in: [...ACTIVE_ORDER_STATUSES] },
+    }).lean();
   };
 }

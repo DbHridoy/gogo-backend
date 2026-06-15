@@ -25,6 +25,43 @@ const getPeriodParams = (query: any) => {
   };
 };
 
+const normalizeDeliverySettings = (body: any) => {
+  const next = { ...body };
+  const numericFields = [
+    "baseDeliveryCharge",
+    "chargePerMile",
+    "minimumDistanceMiles",
+    "baseFee",
+    "perKmRate",
+    "serviceRadius",
+    "adminCommissionPercent",
+    "requestVisibilityDistanceMeters",
+  ];
+
+  numericFields.forEach((field) => {
+    if (next[field] !== undefined && next[field] !== null && next[field] !== "") {
+      next[field] = Number(next[field]);
+    }
+  });
+
+  if (next.adminCommissionPercent !== undefined) {
+    next.adminCommissionPercent = Math.min(
+      100,
+      Math.max(0, next.adminCommissionPercent)
+    );
+  }
+
+  if (typeof next.requestVisibilityInfinite === "string") {
+    next.requestVisibilityInfinite = next.requestVisibilityInfinite === "true";
+  }
+
+  if (next.requestVisibilityInfinite) {
+    next.requestVisibilityDistanceMeters = null;
+  }
+
+  return next;
+};
+
 export class CommonController {
   constructor(
     private commonService: CommonService,
@@ -118,7 +155,7 @@ export class CommonController {
   updateDeliverySettings = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       const updated = await this.commonService.updateSettings({
-        deliverySettings: req.body,
+        deliverySettings: normalizeDeliverySettings(req.body),
       });
       res.status(HttpCodes.Ok).json({
         success: true,

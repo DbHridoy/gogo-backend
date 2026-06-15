@@ -18,6 +18,9 @@ const settingsSchema = new Schema(
       baseFee: { type: Number, default: 5 },
       perKmRate: { type: Number, default: 2.5 },
       serviceRadius: { type: Number, default: 50 },
+      adminCommissionPercent: { type: Number, default: 10 },
+      requestVisibilityDistanceMeters: { type: Number, default: null },
+      requestVisibilityInfinite: { type: Boolean, default: true },
     },
     faqs: [
       {

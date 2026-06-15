@@ -44,6 +44,8 @@ userRoute.patch(
 
 userRoute.patch("/me/location", userController.updateLocation);
 userRoute.patch("/me/documents", driverDocsUpload, userController.updateDriverDocuments);
+userRoute.patch("/me/payout-account", userController.updatePayoutAccount);
+userRoute.delete("/me", userController.deleteMyAccount);
 userRoute.get("/me/addresses", userController.getAddresses);
 userRoute.post("/me/addresses", userController.addAddress);
 userRoute.patch("/me/addresses/:addressId", userController.updateAddress);

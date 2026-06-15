@@ -35,6 +35,21 @@ dashboardRoute.get(
   dashboardController.getAdminEarnings
 );
 dashboardRoute.get(
+  "/driver-payouts",
+  authMiddleware.authorize(["Admin"]),
+  dashboardController.getDriverPayouts
+);
+dashboardRoute.get(
+  "/driver-payouts/history",
+  authMiddleware.authorize(["Admin"]),
+  dashboardController.getDriverPayoutHistory
+);
+dashboardRoute.post(
+  "/driver-payouts/:riderId/pay",
+  authMiddleware.authorize(["Admin"]),
+  dashboardController.payDriver
+);
+dashboardRoute.get(
   "/hot-areas",
   authMiddleware.authorize(["Admin"]),
   dashboardController.getHotAreas

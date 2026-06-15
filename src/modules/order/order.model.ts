@@ -55,7 +55,7 @@ const orderSchema = new Schema(
     paymentMethod: {
       type: String,
       enum: ["Card", "Cash"],
-      default: "Cash",
+      default: "Card",
     },
     paymentStatus: {
       type: String,
@@ -75,6 +75,43 @@ const orderSchema = new Schema(
     completionProof: String,
     review: reviewSchema,
     cancellationReason: String,
+    acceptedAt: Date,
+    dropoffReachedAt: Date,
+    adminCommissionPercent: {
+      type: Number,
+      default: 10,
+    },
+    adminCommissionAmount: {
+      type: Number,
+      default: 0,
+    },
+    driverEarningsAmount: {
+      type: Number,
+      default: 0,
+    },
+    payoutStatus: {
+      type: String,
+      enum: ["NotReady", "Pending", "Paid", "Failed"],
+      default: "NotReady",
+    },
+    settlementStatus: {
+      type: String,
+      enum: ["Unsettled", "Settled"],
+      default: "Unsettled",
+    },
+    settlementId: {
+      type: Schema.Types.ObjectId,
+      ref: "DriverPayout",
+    },
+    settledAt: Date,
+    payoutAccountSnapshot: {
+      provider: String,
+      tapMerchantId: String,
+      status: String,
+      accountNumberLast4: String,
+      iban: String,
+      bankName: String,
+    },
   },
   {
     timestamps: true,

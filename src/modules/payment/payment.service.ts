@@ -3,6 +3,7 @@ import Order from "../order/order.model";
 import { apiError } from "../../errors/api-error";
 import { Errors } from "../../constants/error-codes";
 import { logger } from "../../utils/logger";
+import Settings from "../common/settings.model";
 
 export class PaymentService {
   private getTapHeaders() {
@@ -14,10 +15,26 @@ export class PaymentService {
     };
   }
 
+  private async getPaymentSplit(amount: number) {
+    const settingsDoc = await Settings.findOne().lean();
+    const adminCommissionPercent =
+      settingsDoc?.deliverySettings?.adminCommissionPercent ?? 10;
+    const adminCommissionAmount =
+      Math.round(amount * (adminCommissionPercent / 100) * 100) / 100;
+    const driverEarningsAmount =
+      Math.round((amount - adminCommissionAmount) * 100) / 100;
+
+    return {
+      adminCommissionPercent,
+      adminCommissionAmount,
+      driverEarningsAmount,
+    };
+  }
+
   initiatePayment = async (userId: string, body: any) => {
     const {
       orderId,
-      amount = 10,
+      amount,
       currency = "AED",
       description = "Ride Payment",
       redirectUrl = "gogo://payment/callback",
@@ -30,8 +47,17 @@ export class PaymentService {
       throw new apiError(Errors.NotFound.code, "Order not found");
     }
 
+    const payableAmount = Number(order.price || amount || 0);
+    const split = await this.getPaymentSplit(payableAmount);
+
+    await Order.findByIdAndUpdate(orderId, {
+      paymentMethod: "Card",
+      paymentStatus: "Pending",
+      ...split,
+    });
+
     const payload = {
-      amount,
+      amount: payableAmount,
       currency,
       threeDSecure: true,
       save_card: false,
@@ -40,6 +66,9 @@ export class PaymentService {
       metadata: {
         orderId,
         userId,
+        adminCommissionPercent: String(split.adminCommissionPercent),
+        adminCommissionAmount: String(split.adminCommissionAmount),
+        driverEarningsAmount: String(split.driverEarningsAmount),
       },
       customer: {
         first_name: customer.firstName || "Customer",
@@ -51,7 +80,7 @@ export class PaymentService {
         },
       },
       source: {
-        id: "src_all",
+        id: body.sourceId || "src_all",
       },
       redirect: {
         url: redirectUrl,
@@ -59,6 +88,11 @@ export class PaymentService {
       post: {
         url: postUrl,
       },
+      platform: process.env.TAP_PLATFORM_ID
+        ? {
+            id: process.env.TAP_PLATFORM_ID,
+          }
+        : undefined,
     };
 
     try {
@@ -78,9 +112,10 @@ export class PaymentService {
           user: userId,
           order: orderId,
           chargeId: mockChargeId,
-          amount,
+          amount: payableAmount,
           currency,
           tapStatus: "Initiated",
+          ...split,
         });
         await payment.save();
 
@@ -100,6 +135,7 @@ export class PaymentService {
         amount: data.amount,
         currency: data.currency,
         tapStatus: data.status,
+        ...split,
       });
       await payment.save();
 
@@ -146,9 +182,16 @@ export class PaymentService {
       await payment.save();
 
       if (data.status === "CAPTURED") {
+        const split = await this.getPaymentSplit(payment.amount);
         await Order.findByIdAndUpdate(payment.order, {
           paymentStatus: "Paid",
+          ...split,
         });
+        payment.adminCommissionPercent = split.adminCommissionPercent;
+        payment.adminCommissionAmount = split.adminCommissionAmount;
+        payment.driverEarningsAmount = split.driverEarningsAmount;
+        payment.payoutStatus = "NotReady";
+        await payment.save();
       }
 
       return {
@@ -197,9 +240,16 @@ export class PaymentService {
     await payment.save();
 
     if (webhookPayload.status === "CAPTURED") {
+      const split = await this.getPaymentSplit(payment.amount);
       await Order.findByIdAndUpdate(payment.order, {
         paymentStatus: "Paid",
+        ...split,
       });
+      payment.adminCommissionPercent = split.adminCommissionPercent;
+      payment.adminCommissionAmount = split.adminCommissionAmount;
+      payment.driverEarningsAmount = split.driverEarningsAmount;
+      payment.payoutStatus = "NotReady";
+      await payment.save();
     }
   };
 }
