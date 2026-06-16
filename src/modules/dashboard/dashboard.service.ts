@@ -481,10 +481,10 @@ export class DashboardService {
       body.dateFrom,
       body.dateTo
     );
-    if (settlement.payoutDue <= 0) {
+    if (settlement.payoutDue === 0) {
       throw new apiError(
         Errors.BadRequest.code,
-        "No positive manual payment amount is available"
+        "No settlement amount is available"
       );
     }
 
@@ -511,6 +511,8 @@ export class DashboardService {
       response: {
         manual: true,
         paymentMethod: body.paymentMethod || "hand_to_hand",
+        settlementDirection:
+          settlement.payoutDue > 0 ? "AdminToDriver" : "DriverToAdmin",
         note: body.note,
       },
     });

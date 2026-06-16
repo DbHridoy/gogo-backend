@@ -130,7 +130,7 @@ export class DashboardController {
       );
       res.status(HttpCodes.Ok).json({
         success: true,
-        message: "Driver payment marked as paid successfully",
+        message: "Driver settlement completed successfully",
         data,
       });
     }
