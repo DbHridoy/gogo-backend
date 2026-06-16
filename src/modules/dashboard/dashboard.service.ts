@@ -418,13 +418,30 @@ export class DashboardService {
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
-          amount: { $sum: "$price" },
+          amount: {
+            $sum: {
+              $ifNull: [
+                "$adminCommissionAmount",
+                {
+                  $multiply: [
+                    { $ifNull: ["$price", 0] },
+                    {
+                      $divide: [
+                        { $ifNull: ["$adminCommissionPercent", 10] },
+                        100,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
         },
       },
       { $sort: { _id: 1 } },
     ]);
 
-    return trend.map((t) => ({ date: t._id, amount: t.amount }));
+    return trend.map((t) => ({ date: t._id, amount: roundMoney(t.amount) }));
   };
 
   getAdminEarnings = async (page: number = 1, limit: number = 10) => {

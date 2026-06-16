@@ -80,7 +80,7 @@ export class DashboardController {
       );
       res.status(HttpCodes.Ok).json({
         success: true,
-        message: "Revenue trend fetched successfully",
+        message: "Commission trend fetched successfully",
         data,
       });
     }
