@@ -303,34 +303,61 @@ export class DashboardService {
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
 
-    const [totalUsers, activeRiders, completedOrders] = await Promise.all([
+    const [totalUsers, totalDrivers, totalOrders, completedOrders] = await Promise.all([
       User.countDocuments({ role: "User" }),
       User.countDocuments({ role: "Rider" }),
+      Order.countDocuments(),
       Order.find({ status: "Completed" }).lean(),
     ]);
 
-    const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.price || 0), 0);
+    const totalPayments = completedOrders.reduce((sum, order) => sum + (order.price || 0), 0);
+    const totalCommission = completedOrders.reduce(
+      (sum, order) => sum + getAdminCommission(order),
+      0
+    );
 
-    const todayRevenue = completedOrders
+    const todayOrders = completedOrders
       .filter((order) => {
         const orderDate = new Date(order.completedAt || order.updatedAt);
         return orderDate >= todayStart && orderDate <= todayEnd;
-      })
-      .reduce((sum, order) => sum + (order.price || 0), 0);
+      });
+    const todayPayments = todayOrders.reduce((sum, order) => sum + (order.price || 0), 0);
+    const todayCommission = todayOrders.reduce(
+      (sum, order) => sum + getAdminCommission(order),
+      0
+    );
 
-    const thisMonthRevenue = completedOrders
+    const thisMonthOrders = completedOrders
       .filter((order) => {
         const orderDate = new Date(order.completedAt || order.updatedAt);
         return orderDate >= monthStart;
-      })
-      .reduce((sum, order) => sum + (order.price || 0), 0);
+      });
+    const thisMonthPayments = thisMonthOrders.reduce(
+      (sum, order) => sum + (order.price || 0),
+      0
+    );
+    const thisMonthCommission = thisMonthOrders.reduce(
+      (sum, order) => sum + getAdminCommission(order),
+      0
+    );
 
     return {
       totalUsers,
-      totalRevenue,
-      activeRiders,
-      todayRevenue,
-      thisMonthRevenue,
+      totalDrivers,
+      totalRiders: totalDrivers,
+      activeRiders: totalDrivers,
+      totalOrders,
+      totalRevenue: roundMoney(totalPayments),
+      totalPayments: roundMoney(totalPayments),
+      totalEarning: roundMoney(totalCommission),
+      totalEarnings: roundMoney(totalCommission),
+      todayRevenue: roundMoney(todayPayments),
+      todayPayments: roundMoney(todayPayments),
+      thisMonthRevenue: roundMoney(thisMonthPayments),
+      thisMonthPayments: roundMoney(thisMonthPayments),
+      totalCommission: roundMoney(totalCommission),
+      todayCommission: roundMoney(todayCommission),
+      thisMonthCommission: roundMoney(thisMonthCommission),
     };
   };
 
@@ -403,7 +430,7 @@ export class DashboardService {
   getAdminEarnings = async (page: number = 1, limit: number = 10) => {
     const skip = (page - 1) * limit;
 
-    const [result, total] = await Promise.all([
+    const [orders, total] = await Promise.all([
       Order.find({ status: "Completed" })
         .sort({ updatedAt: -1 })
         .skip(skip)
@@ -413,6 +440,13 @@ export class DashboardService {
         .lean(),
       Order.countDocuments({ status: "Completed" }),
     ]);
+
+    const result = orders.map((order: any) => ({
+      ...order,
+      totalPayment: roundMoney(Number(order.price || 0)),
+      adminCommissionAmount: roundMoney(getAdminCommission(order)),
+      driverEarningsAmount: roundMoney(getDriverEarnings(order)),
+    }));
 
     return {
       meta: { total, page, limit },

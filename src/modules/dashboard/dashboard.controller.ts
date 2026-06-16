@@ -65,7 +65,7 @@ export class DashboardController {
       );
       res.status(HttpCodes.Ok).json({
         success: true,
-        message: "Rider growth fetched successfully",
+        message: "Driver growth fetched successfully",
         data,
       });
     }
@@ -93,7 +93,7 @@ export class DashboardController {
       const data = await this.dashboardService.getAdminEarnings(page, limit);
       res.status(HttpCodes.Ok).json({
         success: true,
-        message: "Admin earnings fetched successfully",
+        message: "Admin payments fetched successfully",
         data,
       });
     }
